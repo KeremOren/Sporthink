@@ -355,9 +355,56 @@ sporthink/
 
 ## 📷 Ekran Görüntüleri
 
-> _Ekran görüntüleri yakında eklenecek._
+### 🏠 Dashboard — Ana Panel
+Gerçek KPI verileri (ciro, UPT, MDO, ATV vb.), trend grafikleri, AI İçgörüler banner'ı, eğitim tamamlama heatmap'i ve mağaza karşılaştırması.
 
-Yapay zeka destekli **insights** sayfası, oyunlaştırılmış **achievements** ekranı, drag-friendly **shift planning** ve canlı **mağaza ligi** podyumu — tüm UI'lar **glass-morphism** ve **cinematic animations** ile zenginleştirilmiştir.
+![Dashboard](./public/screenshots/01-dashboard.png)
+
+---
+
+### 🤖 AI İçgörüler — Anomali Tespiti & Akıllı Eğitim Önerisi
+KPI'larda otomatik anomali tespiti (HIGH/MEDIUM/LOW severity), her anomali için Gemini destekli eğitim önerisi ve tek tıkla toplu atama.
+
+![AI Insights](./public/screenshots/02-insights.png)
+
+---
+
+### 🏆 Başarılarım — XP & Rozet Sistemi
+6 seviyeli tier (Çaylak → Efsane), 14 rozet (Bronz/Gümüş/Altın/Platin), XP progress bar, son aktivite geçmişi ve multi-scope leaderboard.
+
+![Achievements](./public/screenshots/03-achievements.png)
+
+---
+
+### 🏟️ Mağaza Ligi — Sezonluk Yarışma
+🥇🥈🥉 podyum görselleştirme, eğitim/KPI/kalite/sınav ağırlıklı skor formülü, kendi mağaza vurgusu ve drill-down detay.
+
+![Mağaza Ligi](./public/screenshots/04-league.png)
+
+---
+
+### 📅 Vardiya Planlama — Haftalık Takvim
+4 vardiya tipi (Sabah/Akşam/Tam Gün/Gece), drag-friendly modal düzenleme, çalışan onay akışı ve hafta sonu vurgusu.
+
+![Vardiyalar](./public/screenshots/05-shifts.png)
+
+---
+
+### 🎭 Satış Simülasyonu — AI Müşteri Roleplay
+5 kategori (Müşteri Karşılama, Ürün Önerme, İtiraz, Ek Satış, İade), klasik + AI Gemini modu, 4 beceri puanlama.
+
+![Satış Simülasyonu](./public/screenshots/06-simulations.png)
+
+---
+
+### 🏖️ İzin Yönetimi — Bakiye + Onay Akışı
+Yıllık 14 günlük otomatik bakiye, 6 izin tipi, hafta sonu hesaplama, manager onay/red workflow ve iptal hakkı.
+
+![İzinler](./public/screenshots/07-leaves.png)
+
+---
+
+Tüm UI'lar **glass-morphism**, **cinematic animations** ve **mobile-responsive** tasarımla zenginleştirilmiştir.
 
 ---
 
