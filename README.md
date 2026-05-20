@@ -371,7 +371,7 @@ Bu proje **bitirme projesi** kapsamında geliştirilmiş olup **Dokuz Eylül Ün
 
 **Kerem Ören**
 - 🎓 Dokuz Eylül Üniversitesi — Yönetim Bilişim Sistemleri
-- 📧 kerem.oren@outlook.com
+- 📧 kerem.oren2712@gmail.com
 - 🔗 [GitHub](https://github.com/KeremOren)
 
 ---
