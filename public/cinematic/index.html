@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920,height=1080">
+<title>Sporthink — Cinematic Training Experience</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Ambient Particles -->
+<div class="particles" id="particles"></div>
+
+<!-- Animated Cursor -->
+<div class="cursor" id="cursor"></div>
+
+<!-- Sidebar (persistent) -->
+<div class="sidebar">
+  <div class="logo">sp<span>o</span>rthink</div>
+  <div class="nav-item"><div class="icon"></div>Dashboard</div>
+  <div class="nav-item active" id="navEgitim"><div class="icon"></div>Eğitimlerim</div>
+  <div class="nav-item"><div class="icon"></div>AI Asistan</div>
+  <div class="nav-item"><div class="icon"></div>KPI</div>
+  <div class="nav-item"><div class="icon"></div>Performans</div>
+  <div class="nav-item"><div class="icon"></div>Gelişim Dosyası</div>
+  <div class="nav-item"><div class="icon"></div>Sertifikalarım</div>
+  <div class="nav-item"><div class="icon"></div>Topluluk</div>
+</div>
+
+<!-- ═══ SCENE 1: Training List ═══ -->
+<div class="scene active" id="scene1">
+<div class="main">
+  <h1 class="page-title">Eğitimlerim</h1>
+  <p class="page-sub">Atanmış ve devam eden kurslar</p>
+
+  <div class="progress-box">
+    <span style="font-size:.85rem"><strong>5 / 7</strong> kurs başarıyla tamamlandı</span>
+    <div class="progress-bar"><div class="progress-fill" id="mainProgress"></div></div>
+    <div class="stars">⭐⭐⭐☆☆ <span style="font-size:.72rem;color:var(--sub);margin-left:4px">BAŞARI</span></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active">Tümü<span class="count">7</span></div>
+    <div class="tab">Devam Eden<span class="count">0</span></div>
+    <div class="tab">Tamamlandı<span class="count">5</span></div>
+    <div class="tab">Başlanmadı<span class="count">2</span></div>
+  </div>
+
+  <div class="cards-grid">
+    <div class="t-card" id="card1">
+      <div class="top-bar" style="background:var(--red)"></div>
+      <div class="body">
+        <div class="badge-row">
+          <span class="badge" style="background:rgba(229,57,53,.12);color:var(--red)">SATIŞ</span>
+          <span class="badge" style="background:rgba(34,197,94,.12);color:var(--green)">Tamamlandı</span>
+          <span class="badge" style="background:rgba(239,68,68,.08);color:#ef4444">📄 PDF</span>
+        </div>
+        <h3>Müşteri Karşılama ve Memnuniyet Eğitimi</h3>
+        <div class="dur">25 dk</div>
+        <div class="pct" style="color:var(--green)">%100</div>
+        <div class="pbar"><div class="pfill" style="background:var(--green)"></div></div>
+        <div style="font-size:.72rem;color:var(--sub);margin-top:4px">2/2 bölüm tamamlandı</div>
+        <div class="actions">
+          <button class="btn-view btn-green">👁 Tekrar Görüntüle</button>
+          <button class="btn-quiz">🧠 Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="t-card" id="card2">
+      <div class="top-bar" style="background:var(--purple)"></div>
+      <div class="body">
+        <div class="badge-row">
+          <span class="badge" style="background:rgba(139,92,246,.12);color:var(--purple)">ÜRÜN</span>
+          <span class="badge" style="background:rgba(34,197,94,.12);color:var(--green)">Tamamlandı</span>
+          <span class="badge" style="background:rgba(239,68,68,.08);color:#ef4444">📄 PDF</span>
+        </div>
+        <h3>Skechers FW25</h3>
+        <div class="dur">160 dk</div>
+        <div class="pct" style="color:var(--green)">%100</div>
+        <div class="pbar"><div class="pfill" style="background:var(--green)"></div></div>
+        <div style="font-size:.72rem;color:var(--sub);margin-top:4px">1/1 bölüm tamamlandı</div>
+        <div class="actions">
+          <button class="btn-view btn-green" id="skechersBtn">👁 Tekrar Görüntüle</button>
+          <button class="btn-quiz">🧠 Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="t-card" id="card3">
+      <div class="top-bar" style="background:var(--amber)"></div>
+      <div class="body">
+        <div class="badge-row">
+          <span class="badge" style="background:rgba(245,158,11,.12);color:var(--amber)">OPERASYON</span>
+          <span class="badge" style="background:rgba(34,197,94,.12);color:var(--green)">Tamamlandı</span>
+        </div>
+        <h3>Ürün Alarmlama ve Etiketleme Sunumu</h3>
+        <div class="dur">30 dk</div>
+        <div class="pct" style="color:var(--green)">%100</div>
+        <div class="pbar"><div class="pfill" style="background:var(--green)"></div></div>
+        <div class="actions">
+          <button class="btn-view btn-green">👁 Tekrar Görüntüle</button>
+          <button class="btn-quiz">🧠 Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="t-card" id="card4">
+      <div class="top-bar" style="background:var(--purple)"></div>
+      <div class="body">
+        <div class="badge-row">
+          <span class="badge" style="background:rgba(139,92,246,.12);color:var(--purple)">ÜRÜN</span>
+          <span class="badge" style="background:rgba(148,163,184,.1);color:var(--sub)">Başlanmadı</span>
+        </div>
+        <h3>Salomon Footwear</h3>
+        <div class="dur">50 dk</div>
+        <div class="pct" style="color:var(--sub)">%0</div>
+        <div class="pbar"><div class="pfill" style="background:var(--red);width:0"></div></div>
+        <div class="actions">
+          <button class="btn-view btn-red">👁 Görüntüle</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="t-card" id="card5">
+      <div class="top-bar" style="background:var(--red)"></div>
+      <div class="body">
+        <div class="badge-row">
+          <span class="badge" style="background:rgba(229,57,53,.12);color:var(--red)">SATIŞ</span>
+          <span class="badge" style="background:rgba(34,197,94,.12);color:var(--green)">Tamamlandı</span>
+          <span class="badge" style="background:rgba(239,68,68,.08);color:#ef4444">📄 PDF</span>
+        </div>
+        <h3>Müşteri İlişkileri ve Satış Teknikleri</h3>
+        <div class="dur">45 dk</div>
+        <div class="pct" style="color:var(--green)">%100</div>
+        <div class="pbar"><div class="pfill" style="background:var(--green)"></div></div>
+        <div class="actions">
+          <button class="btn-view btn-green">👁 Tekrar Görüntüle</button>
+          <button class="btn-quiz">🧠 Quiz</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="t-card" id="card6">
+      <div class="top-bar" style="background:#0ea5e9"></div>
+      <div class="body">
+        <div class="badge-row">
+          <span class="badge" style="background:rgba(14,165,233,.12);color:#0ea5e9">GÜVENLİK</span>
+          <span class="badge" style="background:rgba(34,197,94,.12);color:var(--green)">Tamamlandı</span>
+        </div>
+        <h3>Mağaza Güvenliği ve İş Sağlığı</h3>
+        <div class="dur">60 dk</div>
+        <div class="pct" style="color:var(--green)">%100</div>
+        <div class="pbar"><div class="pfill" style="background:var(--green)"></div></div>
+        <div class="actions">
+          <button class="btn-view btn-green">👁 Tekrar Görüntüle</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SCENE 2: Skechers Content ═══ -->
+<div class="scene" id="scene2">
+<div class="main">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px">
+    <span style="cursor:pointer;color:var(--sub);font-size:1.2rem">←</span>
+    <h1 class="page-title" style="margin-bottom:0">Skechers FW25</h1>
+  </div>
+  <p class="page-sub">Ürün • Marka ve Ürün Eğitim Sunumu</p>
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden">
+      <div id="contentProgress" style="height:100%;border-radius:3px;background:var(--green);width:0;transition:width 1s ease"></div>
+    </div>
+    <span style="font-size:.82rem;color:var(--sub)">0/1 bölüm</span>
+    <button class="btn-complete nav-btn" id="completeBtn" style="padding:8px 20px;font-size:.82rem">✓ Okudum / Tamamladım</button>
+  </div>
+
+  <div class="content-layout">
+    <div class="content-sidebar">
+      <h4>BÖLÜMLER</h4>
+      <div class="sub">0 / 1 tamamlandı</div>
+      <div class="step active">
+        <div class="step-num">1</div>
+        Bölüm 1
+      </div>
+    </div>
+    <div class="content-main">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div><span style="font-size:.75rem;color:var(--sub)">Bölüm 1 / 1</span><br><strong>Bölüm 1</strong></div>
+      </div>
+      <div class="slide-area" style="background:linear-gradient(135deg,#003366,#001a33);flex-direction:column;text-align:center">
+        <div class="slide-brand" id="slideBrand">SKECHERS.</div>
+        <div class="slide-sub" id="slideSub">FW25</div>
+        <div class="slide-tagline" id="slideTag">MARKA VE ÜRÜN<br>EĞİTİM SUNUMU</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SCENE 3: Quiz Modal ═══ -->
+<div class="scene" id="scene3">
+<div class="main" style="filter:blur(3px)"><!-- blurred bg --></div>
+<div class="modal-overlay" id="quizOverlay">
+  <div class="quiz-modal">
+    <div class="quiz-header">
+      <h3>EĞİTİM QUİZİ</h3>
+      <h2>Skechers FW25</h2>
+    </div>
+    <div class="quiz-stats">
+      <div class="q-stat"><div class="emoji">📋</div><div class="val">10 soru</div><div class="lbl">Soru Sayısı</div></div>
+      <div class="q-stat"><div class="emoji">✅</div><div class="val">7/10</div><div class="lbl">Geçme Notu</div></div>
+      <div class="q-stat"><div class="emoji">🎯</div><div class="val">%70</div><div class="lbl">Başarı Oranı</div></div>
+    </div>
+    <div class="quiz-info">ℹ️ Bu quiz, eğitim dökümanındaki konulara dayalı olarak AI tarafından üretilmiştir.</div>
+    <button class="quiz-start" id="quizStartBtn">✏️ Quizi Başlat</button>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SCENE 4: Quiz Question ═══ -->
+<div class="scene" id="scene4">
+<div class="main" style="filter:blur(3px)"></div>
+<div class="modal-overlay" id="questionOverlay">
+  <div class="quiz-modal" style="width:620px">
+    <div class="quiz-header" style="padding:16px 24px">
+      <h3>EĞİTİM QUİZİ</h3>
+      <h2>Skechers FW25</h2>
+    </div>
+    <div style="padding:20px 24px">
+      <div class="q-progress">
+        <span style="font-size:.82rem;font-weight:600">Soru 7 / 10</span>
+        <div class="bar"><div class="fill" id="qFill" style="width:70%"></div></div>
+        <span class="pct">%70</span>
+      </div>
+      <div class="question-text">
+        <strong style="color:var(--red)">7.</strong> D'Lux Walker modelinin en belirgin yapısal özelliği nedir?
+      </div>
+      <div class="option" id="optA"><div class="option-letter">A</div>Dar kalıp olması</div>
+      <div class="option" id="optB"><div class="option-letter">B</div>Relaxed fit, geniş kalıp olması</div>
+      <div class="option" id="optC"><div class="option-letter">C</div>Sadece profesyonel sporcular için olması</div>
+      <div class="option" id="optD"><div class="option-letter">D</div>Bağcıksız olması</div>
+      <div style="display:flex;justify-content:space-between;margin-top:20px">
+        <button class="nav-btn" style="background:rgba(255,255,255,.06);color:var(--text)">← Önceki</button>
+        <span style="font-size:.82rem;color:var(--sub);align-self:center">Bir seçenek seçin</span>
+        <button class="nav-btn" style="background:rgba(255,255,255,.06);color:var(--text)" id="nextBtn">Sonraki →</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══ SCENE 5: Quiz Results ═══ -->
+<div class="scene" id="scene5">
+<div class="main" style="filter:blur(3px)"></div>
+<div class="modal-overlay" id="resultOverlay">
+  <div class="quiz-modal" style="width:560px">
+    <div class="quiz-header" style="padding:16px 24px">
+      <h3>EĞİTİM QUİZİ</h3>
+      <h2>Skechers FW25</h2>
+    </div>
+    <div class="result-card">
+      <div class="result-emoji">😔</div>
+      <div class="result-title fail">Başarısız</div>
+      <div class="result-sub">Geçme notu: 7/10. Tekrar deneyebilirsiniz.</div>
+      <div class="result-stats">
+        <div class="r-stat"><div class="val">5</div><div class="lbl">Doğru</div></div>
+        <div class="r-stat"><div class="val" style="color:var(--sub)">10</div><div class="lbl">Toplam</div></div>
+        <div class="r-stat"><div class="val" style="color:var(--red)">%50</div><div class="lbl">Başarı</div></div>
+      </div>
+      <div class="dot-row">
+        <div class="dot correct">1</div><div class="dot correct">2</div><div class="dot wrong">3</div>
+        <div class="dot correct">4</div><div class="dot wrong">5</div><div class="dot wrong">6</div>
+        <div class="dot correct">7</div><div class="dot wrong">8</div><div class="dot correct">9</div>
+        <div class="dot wrong">10</div>
+      </div>
+      <div class="result-btns">
+        <button class="btn-retry">🔁 Tekrar Dene</button>
+        <button class="btn-close">✅ Kapat</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script src="animate.js"></script>
+</body>
+</html>

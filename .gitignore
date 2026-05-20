@@ -22,6 +22,7 @@
 
 # misc
 .DS_Store
+Thumbs.db
 *.pem
 
 # debug
@@ -30,8 +31,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files — HASSAS API ANAHTARLARI VAR (Gemini, VAPID, NextAuth)
+.env
+.env.*
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +42,44 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# ==================== Sporthink Custom ====================
+
+# SQLite database — büyük + binary, GitHub'a yüklenmemeli
+*.db
+*.db-journal
+*.sqlite-backup
+prisma/dev.db
+prisma/dev.db.sqlite-backup
+
+# Claude Code worktrees (geçici, kişisel)
+.claude/
+.cursor/
+
+# Büyük medya dosyaları (>50MB GitHub limiti)
+*.mp4
+*.mov
+*.avi
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Local backups
+*.backup
+*.bak
+*.old
+
+# Logs
+logs/
+*.log

@@ -8,14 +8,34 @@
     "start": "next start"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/client": "^5.22.0",
+    "bcryptjs": "^3.0.3",
+    "chart.js": "^4.5.1",
+    "html2canvas": "^1.4.1",
+    "json2csv": "^6.0.0-alpha.2",
+    "jspdf": "^4.2.0",
     "next": "16.1.6",
+    "next-auth": "^4.24.13",
+    "prisma": "^5.22.0",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "19.2.3",
+    "uuid": "^13.0.0",
+    "web-push": "^3.6.7",
+    "xlsx": "^0.18.5"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/json2csv": "^5.0.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
+    "@types/web-push": "^3.6.4",
     "typescript": "^5"
   }
 }
