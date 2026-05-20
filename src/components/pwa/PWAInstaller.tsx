@@ -16,10 +16,16 @@ export default function PWAInstaller() {
     const [installed, setInstalled] = useState(false);
 
     useEffect(() => {
-        // 1. Register service worker
-        if ('serviceWorker' in navigator) {
+        // 1. Register service worker — sadece production'da (dev'de Turbopack ile çakışıyor)
+        const isProduction = process.env.NODE_ENV === 'production';
+        if ('serviceWorker' in navigator && isProduction) {
             navigator.serviceWorker.register('/sw.js')
                 .catch((err) => console.warn('[PWA] SW register failed:', err));
+        } else if ('serviceWorker' in navigator) {
+            // Dev: eski Service Worker'ları temizle (Turbopack chunk çakışması olmasın)
+            navigator.serviceWorker.getRegistrations().then((registrations) => {
+                registrations.forEach((reg) => reg.unregister());
+            }).catch(() => {});
         }
 
         // 2. Detect if already installed (standalone mode)
