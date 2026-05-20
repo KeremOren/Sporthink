@@ -944,6 +944,461 @@ async function main() {
     console.log('  ✓ Topluluk gönderileri oluşturuldu');
 
     // =====================================================================
+    // SATIŞ SİMÜLASYONU — Senaryolar (5 kategori × 2-3 senaryo)
+    // =====================================================================
+    const simScenarios = [
+        // ===== MÜŞTERİ KARŞILAMA =====
+        {
+            category: 'MUSTERI_KARSILAMA',
+            title: 'Yeni Müşteri Karşılaması',
+            description: 'Mağazaya yeni giren müşteriyi doğru karşılama. Sporthink 6 adım protokolü.',
+            difficulty: 'EASY',
+            xpReward: 30,
+            customerContext: 'Bir müşteri (30 yaşında erkek) mağazaya yeni girdi. Etrafı inceliyor, ayakkabı bölümüne doğru bakıyor. Bir satış danışmanı arıyor olabilir.',
+            steps: [
+                {
+                    npc: 'Müşteri mağazaya giriyor ve etrafına bakınmaya başlıyor. Ayakkabı reyonuna doğru yürüyor.',
+                    choices: [
+                        { text: 'Hemen yanına gidip "Aradığınız bir şey var mı?" diye soruyorum', scores: { empati: 10, bilgi: 5, caprazSatis: 5, kapanis: 5 }, feedback: 'Kapalı uçlu soru — müşteriyi savunmaya iter.', isBest: false },
+                        { text: 'Göz teması kurup gülümseyerek "Hoş geldiniz, ben Selin, herhangi bir konuda yardımcı olabilirim" diyorum', scores: { empati: 25, bilgi: 20, caprazSatis: 15, kapanis: 20 }, feedback: 'Mükemmel! Samimi, açık ve kişisel karşılama.', isBest: true },
+                        { text: 'Müşteri kendisi gelsin diye bekliyorum, vitrini düzenliyormuş gibi yapıyorum', scores: { empati: 5, bilgi: 5, caprazSatis: 0, kapanis: 0 }, feedback: 'Pasif yaklaşım — müşteri tamamen yardımsız hisseder.', isBest: false },
+                        { text: '"Bugün indirim var, mont bakıyorsanız %30 var" diyerek konuya giriyorum', scores: { empati: 8, bilgi: 12, caprazSatis: 15, kapanis: 10 }, feedback: 'Erken kampanya bildirimi — ihtiyaç anlamadan satışa odaklanır.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Selam, ben de aslında bakıyordum. Spor ayakkabı arıyorum ama tam ne istediğimi bilmiyorum.',
+                    choices: [
+                        { text: '"Ne için kullanacaksınız? Koşu, günlük, basketbol?" diye aktivite sorusu soruyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 20, kapanis: 22 }, feedback: 'Harika — aktivite tabanlı ihtiyaç analizi.', isBest: true },
+                        { text: '"Nike Pegasus alın, herkes onu alıyor" diyorum', scores: { empati: 5, bilgi: 8, caprazSatis: 10, kapanis: 8 }, feedback: 'Kişiselleştirilmiş öneri yok, jenerik tavsiye.', isBest: false },
+                        { text: '"Bütçeniz nedir?" sorusuyla başlıyorum', scores: { empati: 8, bilgi: 12, caprazSatis: 15, kapanis: 18 }, feedback: 'Doğru ama ilk soru fiyat olmamalı.', isBest: false },
+                        { text: 'Beden numarasını sorup hemen ayakkabı getirmeye gidiyorum', scores: { empati: 10, bilgi: 8, caprazSatis: 5, kapanis: 8 }, feedback: 'Aceleci — beden öncesi ihtiyaç anlaşılmalı.', isBest: false },
+                    ],
+                },
+            ],
+        },
+        {
+            category: 'MUSTERI_KARSILAMA',
+            title: 'Acelesi Olan Müşteri',
+            description: 'Vakti kısıtlı, hızlı karar vermesi gereken müşteri ile etkili karşılama.',
+            difficulty: 'MEDIUM',
+            xpReward: 50,
+            customerContext: 'Müşteri (45 yaşında kadın) elinde poşetlerle mağazaya giriyor. Saatine bakıp duruyor, açıkça acele içinde. Bir an önce ayrılmak istediği belli.',
+            steps: [
+                {
+                    npc: 'Çok acelem var, hızlı bir şey lazım. Yarın yürüyüşe çıkacağım, rahat bir spor ayakkabı arıyorum.',
+                    choices: [
+                        { text: '"Anladım, hemen yardımcı oluyorum. Beden 38 mi? Direkt 3 önerim var, biri kesin uyacak" diyerek hızlı aksiyona geçiyorum', scores: { empati: 25, bilgi: 22, caprazSatis: 18, kapanis: 25 }, feedback: 'Mükemmel — acelesini anladım, hızlı + yapılandırılmış.', isBest: true },
+                        { text: 'Detaylı ihtiyaç analizi yapıyorum: aktivite, mesafe, zemin...', scores: { empati: 8, bilgi: 20, caprazSatis: 12, kapanis: 8 }, feedback: 'Yanlış zamanda detay — müşteri sabırsızlanır.', isBest: false },
+                        { text: '"Şu reyona bakın, hepsi yürüyüş ayakkabısı" deyip uzaktan gösteriyorum', scores: { empati: 5, bilgi: 8, caprazSatis: 5, kapanis: 5 }, feedback: 'Personel müşteri için orada — aktif refakat şart.', isBest: false },
+                        { text: '"Salomon var, biraz pahalı ama en iyisi" deyip premium öneri yapıyorum', scores: { empati: 10, bilgi: 18, caprazSatis: 15, kapanis: 12 }, feedback: 'Müşterinin bütçesini bilmeden premium öneri risk.', isBest: false },
+                    ],
+                },
+                {
+                    npc: '8 numara denedim, çok uygun. Alıyorum. Çabuk kasaya geçebilir miyiz?',
+                    choices: [
+                        { text: 'Hızlıca kasaya alıyorum, yanına bir çift çorap eklemeyi öneriyorum: "Yeni ayakkabıda terlemez nem alıcı çorabımız var, 50TL"', scores: { empati: 22, bilgi: 20, caprazSatis: 25, kapanis: 25 }, feedback: 'Çok iyi — hızlı + kibar çapraz satış.', isBest: true },
+                        { text: 'Hemen kasaya alıp ödemeyi tamamlıyorum, hiçbir ek öneri yapmıyorum', scores: { empati: 18, bilgi: 12, caprazSatis: 5, kapanis: 20 }, feedback: 'Hızlı ama fırsat kaçtı.', isBest: false },
+                        { text: 'Önce çorap, t-shirt, eşofman önerileri sıralıyorum', scores: { empati: 5, bilgi: 15, caprazSatis: 18, kapanis: 8 }, feedback: 'Çok fazla teklif — acelesini görmedin.', isBest: false },
+                        { text: '"Sadakat kartınız var mı? Kayıt için 2 dakika..." diye kayıt başlatıyorum', scores: { empati: 5, bilgi: 8, caprazSatis: 10, kapanis: 8 }, feedback: 'Acelesi olan müşteriye kayıt formu yanlış zamanlama.', isBest: false },
+                    ],
+                },
+            ],
+        },
+        {
+            category: 'MUSTERI_KARSILAMA',
+            title: 'Sinirli Geri Dönen Müşteri',
+            description: 'Daha önce mağazadan alışveriş yapmış, memnun kalmamış sinirli müşteri ile diyalog.',
+            difficulty: 'HARD',
+            xpReward: 80,
+            customerContext: 'Müşteri (35 yaşında) elinde Sporthink poşetiyle hızla mağazaya giriyor. Yüzü kızarmış, açıkça sinirli. Doğrudan kasaya yöneliyor.',
+            steps: [
+                {
+                    npc: 'Geçen hafta aldığım bu ayakkabı 3 günde söküldü! Para iade istiyorum, hemen!',
+                    choices: [
+                        { text: 'Sakin bir tonla "Çok üzüldüm yaşadığınız bu duruma. Hemen inceleyelim, kesinlikle çözeceğiz" diyorum', scores: { empati: 25, bilgi: 18, caprazSatis: 10, kapanis: 22 }, feedback: 'Mükemmel — empati önce, çözüm sonra.', isBest: true },
+                        { text: '"Faturanız var mı? 14 gün kuralı var" diye prosedüre giriyorum', scores: { empati: 5, bilgi: 18, caprazSatis: 5, kapanis: 10 }, feedback: 'Yanlış başlangıç — önce duygusal taraf.', isBest: false },
+                        { text: '"Belki yanlış kullandınız" diyerek müşteriyi sorguluyorum', scores: { empati: 0, bilgi: 5, caprazSatis: 0, kapanis: 0 }, feedback: 'Suçlayıcı — müşteri daha çok kızar.', isBest: false },
+                        { text: '"Anlıyorum, müdürü çağırayım" deyip sorumluluğu devrediyorum', scores: { empati: 12, bilgi: 8, caprazSatis: 5, kapanis: 8 }, feedback: 'Bir satış danışmanı önce kendi çözüm sunmalı.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Tamam ama bu kadar pahalı ayakkabı 3 günde dağılır mı? Bana kalitesizmiş gibi geldi.',
+                    choices: [
+                        { text: '"Tamamen haklısınız, bu kabul edilebilir değil. Ayakkabıyı değiştiriyoruz, üstüne %15 ekstra indirim de tanıyorum" diyorum', scores: { empati: 25, bilgi: 20, caprazSatis: 18, kapanis: 25 }, feedback: 'Çok iyi — sorumluluk + ekstra değer.', isBest: true },
+                        { text: 'Üretim hatası olabilir, üreticiye iletip 2 hafta beklemenizi istiyorum', scores: { empati: 8, bilgi: 15, caprazSatis: 5, kapanis: 10 }, feedback: 'Müşteriyi bekletmek = kayıp müşteri.', isBest: false },
+                        { text: 'Eşit fiyatlı başka model öneriyorum, eskisini yenisi ile değiştiriyorum', scores: { empati: 20, bilgi: 22, caprazSatis: 15, kapanis: 22 }, feedback: 'İyi — hızlı çözüm, ama ekstra iyileştirme kaçırıldı.', isBest: false },
+                        { text: '"Marka garantisi var, üretici çözmeli" diyerek sorumluluğu üreticiye yıkıyorum', scores: { empati: 5, bilgi: 12, caprazSatis: 5, kapanis: 8 }, feedback: 'Sporthink mağazası sorumluluğu üstlenmeli.', isBest: false },
+                    ],
+                },
+            ],
+        },
+
+        // ===== ÜRÜN ÖNERME =====
+        {
+            category: 'URUN_ONERME',
+            title: 'Koşuya Yeni Başlayan Müşteri',
+            description: 'İlk koşu ayakkabısını alacak, ne istediğini bilmeyen müşteriye doğru ürün önerisi.',
+            difficulty: 'EASY',
+            xpReward: 40,
+            customerContext: 'Genç bir müşteri (25 yaşında erkek) koşuya yeni başlamak istiyor. Hiçbir spor ayakkabı bilgisi yok, danışmana güveniyor.',
+            steps: [
+                {
+                    npc: 'Koşuya yeni başlayacağım. Bir ayakkabı arıyorum ama hiçbir şey bilmiyorum.',
+                    choices: [
+                        { text: '"Tebrikler! Önce sorayım: haftada kaç gün, ne kadar süre koşmayı planlıyorsunuz? Ve genelde asfaltta mı koşacaksınız?" diyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 18, kapanis: 22 }, feedback: 'Mükemmel — empati + ihtiyaç analizi.', isBest: true },
+                        { text: '"Nike Pegasus alın, başlangıç için en iyisi" diyorum', scores: { empati: 10, bilgi: 15, caprazSatis: 10, kapanis: 15 }, feedback: 'İyi model ama kişiselleştirme yok.', isBest: false },
+                        { text: '"En pahalı modeli alın, garantili" diyorum', scores: { empati: 5, bilgi: 8, caprazSatis: 15, kapanis: 8 }, feedback: 'Hatalı — ihtiyaç odaklı olmalı.', isBest: false },
+                        { text: '"İndirimli koşu ayakkabılarına bakın" deyip indirim reyonuna yönlendiriyorum', scores: { empati: 12, bilgi: 10, caprazSatis: 5, kapanis: 8 }, feedback: 'Yeni başlayan biri için kalite önemli.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Haftada 3-4 gün, 30 dakika kadar. Park var evde yakınımda, asfalt yol.',
+                    choices: [
+                        { text: '"Nötr pronasyon kontrolü için ayağa bakayım, sonra Nike Pegasus 41 veya Adidas Supernova öneriyorum — başlangıç için ikisi de mükemmel" diyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 20, kapanis: 25 }, feedback: 'Mükemmel — teknik bilgi + pronasyon analizi.', isBest: true },
+                        { text: 'En yeni modeli, en yüksek fiyatlısını öneriyorum', scores: { empati: 8, bilgi: 12, caprazSatis: 18, kapanis: 12 }, feedback: 'Yeni başlayan birine premium gereksiz.', isBest: false },
+                        { text: '"Sneaker da olabilir, koşu için de uygun" diyorum', scores: { empati: 8, bilgi: 5, caprazSatis: 10, kapanis: 10 }, feedback: 'Yanlış bilgi — sneaker koşu için tasarlanmamış.', isBest: false },
+                        { text: 'Koşu ayakkabısı yerine yürüyüş ayakkabısı öneriyorum', scores: { empati: 10, bilgi: 8, caprazSatis: 8, kapanis: 8 }, feedback: 'Yanlış kategori — müşteri koşu istedi.', isBest: false },
+                    ],
+                },
+            ],
+        },
+        {
+            category: 'URUN_ONERME',
+            title: 'Outdoor Mont Seçimi',
+            description: 'Kayak ile şehir kullanımı arasında kararsız müşteri için doğru mont seçimi.',
+            difficulty: 'MEDIUM',
+            xpReward: 60,
+            customerContext: 'Müşteri (40 yaşında) Şubat ayı için mont arıyor. Hem 2 hafta sonu Uludağ kayağı, hem de şehir günlük kullanımı planı var.',
+            steps: [
+                {
+                    npc: 'Mont arıyorum. Hem Uludağ kayağı için hem şehir için kullanmak istiyorum. Tek bir mont yeterli mi yoksa iki ayrı mı almalıyım?',
+                    choices: [
+                        { text: '"3-in-1 mont mükemmel sizin için — iç astar şehir için, dış tabakası ile birlikte kayak için. The North Face\'in Thermoball serisi ideal" diyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 22, kapanis: 22 }, feedback: 'Mükemmel — tek üründe iki çözüm.', isBest: true },
+                        { text: '"İki ayrı almak en iyisi, kompromis olmaz" diyorum', scores: { empati: 12, bilgi: 18, caprazSatis: 22, kapanis: 12 }, feedback: 'Bütçe için pratik değil — 3-in-1 daha iyi.', isBest: false },
+                        { text: 'En pahalı kayak montunu öneriyorum, şehir için de "uyar" diyorum', scores: { empati: 8, bilgi: 12, caprazSatis: 15, kapanis: 10 }, feedback: 'Kayak montu şehirde aşırı abartı.', isBest: false },
+                        { text: '"Hangisi daha sık? Birini önceliklendirelim" diyerek karar erteliyorum', scores: { empati: 15, bilgi: 15, caprazSatis: 8, kapanis: 12 }, feedback: 'Müşteri zaten ikisini de istedi — direkt çözüm sun.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'İlginç, 3-in-1\'i hiç düşünmemiştim! Peki ısı yalıtımı yeterli mi? -10°C\'de Uludağ\'da donmam değil mi?',
+                    choices: [
+                        { text: '"Bu modelde DryVent su geçirmez + Thermoball izolasyon var, -15°C\'ye kadar test edilmiş. Termal iç giyim eklerseniz garantili" diyerek detaylı bilgi veriyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 25, kapanis: 25 }, feedback: 'Mükemmel — teknik detay + çapraz satış (termal iç giyim).', isBest: true },
+                        { text: '"Yeterli olur" diyerek geçiştiriyorum', scores: { empati: 8, bilgi: 5, caprazSatis: 5, kapanis: 10 }, feedback: 'Belirsiz cevap güveni zedeler.', isBest: false },
+                        { text: '"Emin değilim, daha kalın model var" diyerek farklı modele yönlendiriyorum', scores: { empati: 10, bilgi: 8, caprazSatis: 12, kapanis: 8 }, feedback: 'Ürün bilgisi eksikliği — güven kaybı.', isBest: false },
+                        { text: '"Etiketinde yazıyor, okuyabilirsiniz" diyerek müşteriyi etikete yönlendiriyorum', scores: { empati: 5, bilgi: 12, caprazSatis: 5, kapanis: 5 }, feedback: 'Müşteri SİZE soruyor — pasif yanıt.', isBest: false },
+                    ],
+                },
+            ],
+        },
+        {
+            category: 'URUN_ONERME',
+            title: 'Profesyonel Basketbolcu Müşteri',
+            description: 'Performans odaklı, teknik detay isteyen profesyonel sporcu için ayakkabı önerisi.',
+            difficulty: 'HARD',
+            xpReward: 80,
+            customerContext: 'Müşteri (28 yaşında, fit görünümlü) basketbol oynuyor, takım antrenmanları haftada 5 gün. Eski ayakkabısının ne özelliklerini sevdiğini biliyor.',
+            steps: [
+                {
+                    npc: 'Eski ayakkabımda Air sole vardı, çok memnundum ama topuk yastığı yeterli değildi. Şimdi takım da güç çalışmalarına başladı, daha fazla destek lazım.',
+                    choices: [
+                        { text: '"Nike LeBron veya Adidas Harden Vol — ikisi de Zoom Air + Boost yastıklamayla topukta ekstra destek sunar. Sıçrama gücünüze göre hangisi olsun?" diyerek profesyonel diyalog kuruyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 22, kapanis: 25 }, feedback: 'Mükemmel — uzman seviyesi diyalog.', isBest: true },
+                        { text: '"Air Jordan alın, en popüler" diyorum', scores: { empati: 10, bilgi: 12, caprazSatis: 12, kapanis: 10 }, feedback: 'Yüzeysel öneri — profesyonel müşteri detay bekler.', isBest: false },
+                        { text: '"En pahalı modeli alın" diyorum', scores: { empati: 5, bilgi: 8, caprazSatis: 18, kapanis: 10 }, feedback: 'Performans ≠ pahalı.', isBest: false },
+                        { text: 'Şüpheli yaklaşıp "Antrenmanınıza özel ayakkabı seçmeli, takım koçunuz ne diyor?" diyorum', scores: { empati: 12, bilgi: 18, caprazSatis: 8, kapanis: 8 }, feedback: 'Müşteri zaten teknik bilgi verdi — sorumluluğu devretme.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Sıçramada güç çalışırım. Zoom Air ile Boost arasında karar veremiyorum, ikisi de iyi geldi.',
+                    choices: [
+                        { text: '"İkisi de top kalitesinde. Sıçrama hareketi için Zoom Air daha direkt geri tepki, Boost ise koşuya da uygun. Antrenman dışı kullanım da olacak mı?" diyerek son detayı çıkarıyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 25, kapanis: 25 }, feedback: 'Mükemmel — son ayrıştırma sorusu + çapraz satış kapısı.', isBest: true },
+                        { text: 'Yazı tura atın diyerek karar veremediği için müşteriyi yönlendiriyorum', scores: { empati: 8, bilgi: 5, caprazSatis: 5, kapanis: 5 }, feedback: 'Profesyonelce değil.', isBest: false },
+                        { text: '"Hangisi daha pahalı, onu önereceğim" diyorum', scores: { empati: 5, bilgi: 8, caprazSatis: 12, kapanis: 10 }, feedback: 'Müşteri etik dışı buluyor — güven kayıp.', isBest: false },
+                        { text: 'İkisi de aynı diyerek farkı belirtmiyorum', scores: { empati: 10, bilgi: 5, caprazSatis: 8, kapanis: 8 }, feedback: 'Profesyonel müşteriye yetersiz bilgi.', isBest: false },
+                    ],
+                },
+            ],
+        },
+
+        // ===== İTİRAZ KARŞILAMA =====
+        {
+            category: 'ITIRAZ',
+            title: 'Fiyat İtirazı: "Çok pahalı"',
+            description: 'Müşteri ürünü beğendi ama fiyat itirazı yapıyor. Doğru karşılama yöntemi.',
+            difficulty: 'EASY',
+            xpReward: 40,
+            customerContext: 'Müşteri Nike Pegasus 41 modelini denedi, çok beğendi. Fakat fiyatı yüksek bulduğunu söylüyor.',
+            steps: [
+                {
+                    npc: 'Çok rahat ama 4.500 TL biraz fazla. İndirimi var mı?',
+                    choices: [
+                        { text: '"Yatırım olarak düşünün — 800 km koştuğunuzda km başına 6 TL düşer. Sporthink kart üyelikle %10, ek olarak 12 ay taksitle 375 TL/ay olabilir" diyerek değeri anlatıyorum', scores: { empati: 22, bilgi: 22, caprazSatis: 22, kapanis: 25 }, feedback: 'Mükemmel — değer anlatımı + finansman çözümü.', isBest: true },
+                        { text: '"Üzgünüm, fiyat sabit" diyorum', scores: { empati: 5, bilgi: 8, caprazSatis: 5, kapanis: 5 }, feedback: 'Pasif — satışı kaybet.', isBest: false },
+                        { text: 'Hemen %20 indirim teklif ediyorum', scores: { empati: 12, bilgi: 10, caprazSatis: 8, kapanis: 22 }, feedback: 'Kolay indirim — kar marjı zarar.', isBest: false },
+                        { text: '"Ucuz model var, ona bakın" deyip daha düşük segmente yönlendiriyorum', scores: { empati: 10, bilgi: 12, caprazSatis: 8, kapanis: 12 }, feedback: 'Premium müşteri istiyor — segment düşürmek satışı kaçırır.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Hmm, taksit olursa düşüneyim. Bu modelin alt segmenti yok mu?',
+                    choices: [
+                        { text: '"Nike Revolution daha uygun (2.200 TL) ama Boost teknolojisi yok. Karar size — Pegasus 12 ay taksitle 375 TL/ay, Revolution peşin 2.200 TL" diyerek seçenek sunuyorum', scores: { empati: 25, bilgi: 25, caprazSatis: 20, kapanis: 25 }, feedback: 'Mükemmel — şeffaf karşılaştırma + müşteri kararı.', isBest: true },
+                        { text: '"Hayır, sadece bu var" diyorum', scores: { empati: 5, bilgi: 5, caprazSatis: 5, kapanis: 5 }, feedback: 'Bilgi eksik — alt segment her zaman vardır.', isBest: false },
+                        { text: 'Pegasus\'un eski modelini outlet fiyatla teklif ediyorum', scores: { empati: 22, bilgi: 20, caprazSatis: 15, kapanis: 22 }, feedback: 'İyi alternatif — kar marjı korunur.', isBest: false },
+                        { text: 'Pegasus alması için baskı uygulamaya başlıyorum', scores: { empati: 5, bilgi: 12, caprazSatis: 10, kapanis: 15 }, feedback: 'Baskı = kaybedilen müşteri.', isBest: false },
+                    ],
+                },
+            ],
+        },
+        {
+            category: 'ITIRAZ',
+            title: 'Marka İtirazı: "Nike daha iyi"',
+            description: 'Müşteri Sporthink\'in önerdiği ürünü Nike ile karşılaştırıyor.',
+            difficulty: 'MEDIUM',
+            xpReward: 60,
+            customerContext: 'Müşteri Hummel marka koşu ayakkabısını denedi. "Niye Nike değil de Hummel?" diye soruyor.',
+            steps: [
+                {
+                    npc: 'Hummel mi? Hiç koşu modelinizi duymadım. Nike\'tan ne farkı var?',
+                    choices: [
+                        { text: '"Çok haklı soru. Hummel Danimarka markası, koşuda yeni ama futbol/handbol\'da 100 yıllık uzman. Bu modelinde Boost benzeri teknoloji var, fiyatı Nike\'ın yarısı. Test ederseniz farkı görürsünüz" diyorum', scores: { empati: 25, bilgi: 25, caprazSatis: 22, kapanis: 25 }, feedback: 'Mükemmel — marka hikayesi + değer önerisi.', isBest: true },
+                        { text: '"Nike daha pahalı, Hummel daha ucuz" diyorum', scores: { empati: 8, bilgi: 10, caprazSatis: 8, kapanis: 10 }, feedback: 'Yetersiz — sadece fiyat farkı değil önemli olan.', isBest: false },
+                        { text: '"Marka önemli değil, biri al" diyorum', scores: { empati: 5, bilgi: 5, caprazSatis: 5, kapanis: 5 }, feedback: 'Müşteri için marka önemli — küçümseme.', isBest: false },
+                        { text: '"O zaman Nike alalım" deyip Nike\'a yönlendiriyorum', scores: { empati: 15, bilgi: 8, caprazSatis: 10, kapanis: 15 }, feedback: 'Hummel için savunma yapmadın — satışı kaçırırsın.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Mantıklı. Yine de Nike rahat geliyor. Ama Hummel\'a güvenebilir miyim?',
+                    choices: [
+                        { text: '"30 gün ürün garantimiz var — sevmezseniz iade. Ayrıca arkadaşınızı arayıp güvendiğinizden emin olabilirsiniz. Test için 5 dakikalık denemeyi öneriyorum" diyorum', scores: { empati: 25, bilgi: 22, caprazSatis: 20, kapanis: 25 }, feedback: 'Mükemmel — risk azaltma + somut güven sağlama.', isBest: true },
+                        { text: '"Güvenmiyorsanız almayın" diyerek sorumluluğu kabul etmiyorum', scores: { empati: 5, bilgi: 5, caprazSatis: 5, kapanis: 5 }, feedback: 'Yanlış — satışı kaybedersin.', isBest: false },
+                        { text: '"Müdüre sorayım" diyerek sorumluluğu devrediyorum', scores: { empati: 10, bilgi: 8, caprazSatis: 5, kapanis: 8 }, feedback: 'Kendi karar verme — bilgi sahibi olmalısın.', isBest: false },
+                        { text: '"En çok satan model" deyip popülerlik anlatıyorum', scores: { empati: 12, bilgi: 12, caprazSatis: 10, kapanis: 15 }, feedback: 'İyi ama kanıt eksik.', isBest: false },
+                    ],
+                },
+            ],
+        },
+        {
+            category: 'ITIRAZ',
+            title: 'Kalite Şüphesi: "Çabuk dağılır"',
+            description: 'Geçmişte ucuz ayakkabı yaşayan müşteri, yeni alımda kalite kaygısı taşıyor.',
+            difficulty: 'HARD',
+            xpReward: 80,
+            customerContext: 'Müşteri (38 yaşında) "Geçen sefer aldığım indirimli ayakkabı 2 ayda söküldü" diyerek geliyor. Şüpheli, mağazaya güvensiz.',
+            steps: [
+                {
+                    npc: 'Şu anda iyi gözüküyor ama gerçekten dayanır mı? Bana garanti verebilir misiniz?',
+                    choices: [
+                        { text: '"Tamamen anlıyorum — bu modelin Türkiye distribütöründen 2 yıl garanti yazılı var. Sporthink olarak ek 30 gün memnuniyet garantimiz de var. Yani 24 ay süreyle koruma altındasınız" diyerek somut garanti veriyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 18, kapanis: 25 }, feedback: 'Mükemmel — empati + somut garanti.', isBest: true },
+                        { text: '"Pahalı ürün dayanır, ucuz olan dayanmaz" diyerek genel cevap veriyorum', scores: { empati: 8, bilgi: 8, caprazSatis: 5, kapanis: 10 }, feedback: 'Müşteriye somut güven veremiyor.', isBest: false },
+                        { text: '"Hepsi dayanır, endişelenmeyin" diyorum', scores: { empati: 5, bilgi: 5, caprazSatis: 5, kapanis: 8 }, feedback: 'Boş güvence — müşteriyi rahatlatmaz.', isBest: false },
+                        { text: '"Garanti yok, dayanma sizin bakımınıza bağlı" diyorum', scores: { empati: 5, bilgi: 10, caprazSatis: 5, kapanis: 5 }, feedback: 'Olumsuz yaklaşım — satış imkansız.', isBest: false },
+                    ],
+                },
+                {
+                    npc: '2 yıl garanti güzel ama nasıl iddia ediyorum eğer söküldüğünde?',
+                    choices: [
+                        { text: '"Çok basit: faturanızı saklayın, ürün sökülürse mağazaya getirin, biz hemen yenisini değiştiriyoruz. Hatta WhatsApp\'tan fotoğraf gönderirseniz online da başlatabiliyoruz" diyerek sürecin kolaylığını anlatıyorum', scores: { empati: 25, bilgi: 25, caprazSatis: 18, kapanis: 25 }, feedback: 'Mükemmel — süreç berraklığı + kolay erişim.', isBest: true },
+                        { text: '"Üretici merkezine göndermeniz gerekir, 2-3 ay sürer" diyorum', scores: { empati: 8, bilgi: 12, caprazSatis: 5, kapanis: 8 }, feedback: 'Müşteri için ağır prosedür = kayıp.', isBest: false },
+                        { text: '"Müdüre danışın" diyerek belirsizleştiriyorum', scores: { empati: 10, bilgi: 8, caprazSatis: 5, kapanis: 8 }, feedback: 'Senin bilmen gerek.', isBest: false },
+                        { text: '"Bunlar nadiren olur, endişelenmeyin" diyorum', scores: { empati: 12, bilgi: 8, caprazSatis: 5, kapanis: 12 }, feedback: 'Müşterinin sorusunu cevaplamıyor.', isBest: false },
+                    ],
+                },
+            ],
+        },
+
+        // ===== EK SATIŞ =====
+        {
+            category: 'EK_SATIS',
+            title: 'Ayakkabı + Çorap + Bakım Seti',
+            description: 'Koşu ayakkabısı alan müşteriye doğru ek ürün önerisi (UPT artırma).',
+            difficulty: 'EASY',
+            xpReward: 40,
+            customerContext: 'Müşteri Nike Pegasus aldı, kasaya gidiyor. Ödemeyi yapmak üzere.',
+            steps: [
+                {
+                    npc: 'Tamam, bunu alacağım. Kasaya geçelim mi?',
+                    choices: [
+                        { text: '"Tabii ki! Bu arada Nike Performance Çorap (250 TL) ve mesh temizleme spreyi (180 TL) — koşu ayakkabısı performansını korumak için ideal kombinasyon. Set olarak %15 indirimle 365 TL. Eklemek ister misiniz?" diyerek ürün bazlı çapraz satış yapıyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 25, kapanis: 25 }, feedback: 'Mükemmel — ürünle alakalı çapraz satış + paket indirim.', isBest: true },
+                        { text: 'Hiçbir ek öneri yapmadan kasaya geçiyorum', scores: { empati: 18, bilgi: 10, caprazSatis: 5, kapanis: 22 }, feedback: 'Fırsat kaybı — UPT 1.0\'da kalır.', isBest: false },
+                        { text: 'Sadece çorap öneriyorum, başka bir şey yok', scores: { empati: 18, bilgi: 18, caprazSatis: 15, kapanis: 22 }, feedback: 'Tek ürün — kombinasyon değil.', isBest: false },
+                        { text: '5 ayrı ürün listesi sayıp müşteriyi bunaltıyorum', scores: { empati: 5, bilgi: 15, caprazSatis: 12, kapanis: 8 }, feedback: 'Aşırı yükleme — müşteri reddeder.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Çorap mantıklı, onu da alayım. Sprey gerçekten gerekli mi?',
+                    choices: [
+                        { text: '"Aslında Nike\'ın bu modelinde mesh kumaş var. Sprey kullanılmazsa terlemeden ışıltısını kaybeder ve omur yapısı zarar görür. 6 ay düzenli kullanım = ömür 2 katı. Eklemek ister misiniz?" diyerek değer anlatıyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 25, kapanis: 22 }, feedback: 'Mükemmel — somut fayda + uzun vadeli değer.', isBest: true },
+                        { text: '"Gerekli değil, almasanız da olur" diyorum', scores: { empati: 18, bilgi: 12, caprazSatis: 5, kapanis: 18 }, feedback: 'Çapraz satışı geri çekiyorsun — fırsat kaybı.', isBest: false },
+                        { text: '"Çok yararlı, kesinlikle almalısınız" diyerek baskı yapıyorum', scores: { empati: 5, bilgi: 15, caprazSatis: 12, kapanis: 15 }, feedback: 'Baskı = güven kaybı.', isBest: false },
+                        { text: '"Tabii, kararı size bırakıyorum" diyerek karar yükünü müşteriye veriyorum', scores: { empati: 15, bilgi: 10, caprazSatis: 10, kapanis: 12 }, feedback: 'Pasif — değer açıklaması yok.', isBest: false },
+                    ],
+                },
+            ],
+        },
+        {
+            category: 'EK_SATIS',
+            title: 'Kayak Tatili Komple Set',
+            description: 'Tek mont alan müşteriye kayak ekipmanı paketi önerisi.',
+            difficulty: 'MEDIUM',
+            xpReward: 70,
+            customerContext: 'Müşteri Uludağ kayak tatili için Columbia mont aldı. Hala kayak başlığı, eldiven, kayak gözlüğü yok.',
+            steps: [
+                {
+                    npc: 'Tamam mont aldım. Geri kalanları başka bir yerden mi alsam? Burası daha pahalı gibi.',
+                    choices: [
+                        { text: '"Kayak ekipman setimiz var — kask, eldiven, gözlük, termal iç giyim. Hepsi bir arada %20 indirimli paket. Ayrı ayrı 3.500 TL, paket 2.800 TL. Üstüne mağaza içinde kayak bot deneme alanımız da var. Bakar mısınız?" diyerek paket öneriyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 25, kapanis: 25 }, feedback: 'Mükemmel — paket avantajı + deneyim.', isBest: true },
+                        { text: '"Tabii, başka yerden alın" diyerek müşteriyi gönderiyorum', scores: { empati: 12, bilgi: 8, caprazSatis: 0, kapanis: 5 }, feedback: 'Satışı tamamen kaybediyorsun!', isBest: false },
+                        { text: 'Sadece kask öneriyorum, diğerlerini söylemiyorum', scores: { empati: 15, bilgi: 12, caprazSatis: 12, kapanis: 15 }, feedback: 'Tam paket için fırsat var ama kullanmıyorsun.', isBest: false },
+                        { text: '"Online sitemizden bakın" diyerek mağaza dışına yönlendiriyorum', scores: { empati: 10, bilgi: 12, caprazSatis: 8, kapanis: 8 }, feedback: 'Mağaza içinde satış yapamadın.', isBest: false },
+                    ],
+                },
+                {
+                    npc: '2.800 TL paket cazip ama bütçemi aşıyor. 2.000 TL\'ye kadar yapabilirim.',
+                    choices: [
+                        { text: '"Anladım. Önceliklendirelim: en kritik ekipman kask (350) + gözlük (650) + eldiven (450) = 1.450 TL. Termali Decathlon\'dan alabilirsiniz. Bu üçü olmadan güvenli kayak yapılamaz" diyerek temel pakete yönlendiriyorum', scores: { empati: 25, bilgi: 25, caprazSatis: 22, kapanis: 25 }, feedback: 'Mükemmel — bütçeye uygun + öncelik mantığı.', isBest: true },
+                        { text: '"O zaman paket olmaz, ayrı ayrı tam fiyattan satın alın" diyorum', scores: { empati: 8, bilgi: 12, caprazSatis: 15, kapanis: 12 }, feedback: 'Pazarlık becerisi yok.', isBest: false },
+                        { text: 'Hemen 2.000 TL\'ye paket indirimi yapıyorum', scores: { empati: 18, bilgi: 15, caprazSatis: 18, kapanis: 22 }, feedback: 'Kolay indirim — kar zedelenir.', isBest: false },
+                        { text: '"Daha düşük fiyatlı ekipmanlar var, kalite düşük ama" diyorum', scores: { empati: 12, bilgi: 18, caprazSatis: 18, kapanis: 12 }, feedback: 'Güvenlik ekipmanında kalite kompromisi tehlikeli.', isBest: false },
+                    ],
+                },
+            ],
+        },
+        {
+            category: 'EK_SATIS',
+            title: 'Premium Müşteri — Komple Yenilenme',
+            description: 'Yüksek bütçeli müşteri için komple spor giyim yenileme önerisi.',
+            difficulty: 'HARD',
+            xpReward: 90,
+            customerContext: 'Müşteri (45 yaşında, iş adamı) tenis kortuna başlıyor. Sadece bir tenis raketi almaya gelmiş ama bütçesi geniş.',
+            steps: [
+                {
+                    npc: 'Tenis oynamaya başlıyorum, raketi aldım. Başka neye ihtiyacım olur?',
+                    choices: [
+                        { text: '"Tebrikler! Profesyonel set öneriyorum: Nike DriFit tenis tişört+şort (2.500), kort ayakkabısı (3.800), tenis topları (300), kemerli omuz çantası (1.200), ve dolgu eldiveni (250). Toplam 8.050 TL, sezon başı %15 indirimle 6.840 TL. Hepsi denemeli mi?" diyerek komple set sunuyorum', scores: { empati: 22, bilgi: 25, caprazSatis: 25, kapanis: 25 }, feedback: 'Mükemmel — kapsamlı premium set.', isBest: true },
+                        { text: 'Sadece "ayakkabı" diyerek tek ürün öneriyorum', scores: { empati: 18, bilgi: 15, caprazSatis: 12, kapanis: 18 }, feedback: 'Premium müşteri için yetersiz.', isBest: false },
+                        { text: '"Önce raketle başlayın, ihtiyaca göre alırsınız" diyorum', scores: { empati: 18, bilgi: 12, caprazSatis: 5, kapanis: 15 }, feedback: 'Çapraz satış fırsatı kaçtı.', isBest: false },
+                        { text: 'Yüksek fiyatlı raket önerip diğerlerini geçiştiriyorum', scores: { empati: 8, bilgi: 18, caprazSatis: 12, kapanis: 12 }, feedback: 'Müşteri raket aldı zaten.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Çok kapsamlı! Hepsini almak istiyorum ama sezon başı %15 yerine %20 olur mu? Premium müşteriyim sonuçta.',
+                    choices: [
+                        { text: '"%20 için müdür onayı gerek ama beni tanıyın, sizin gibi premium müşteri için müdürü çağırıyorum — ek olarak sadakat kartı + 6 ay tenis dersi indirimi paketi de yapabiliriz. Bekleyebilir misiniz 2 dakika?" diyerek katmanlı çözüm sunuyorum', scores: { empati: 25, bilgi: 22, caprazSatis: 25, kapanis: 25 }, feedback: 'Mükemmel — premium müşteri için özel muamele + ekstra değer.', isBest: true },
+                        { text: 'Direkt "olmaz" diyerek pazarlığı kapatıyorum', scores: { empati: 5, bilgi: 10, caprazSatis: 5, kapanis: 8 }, feedback: 'Premium müşteri kaybedildi.', isBest: false },
+                        { text: 'Anında %20 indirim onaylıyorum (yetkili olmadan)', scores: { empati: 18, bilgi: 8, caprazSatis: 18, kapanis: 22 }, feedback: 'Yetkisiz indirim — şirket politikası ihlali.', isBest: false },
+                        { text: '"Sezon başı sabit, sonra %30\'a çıkar" diyerek beklemesini öneriyorum', scores: { empati: 10, bilgi: 12, caprazSatis: 5, kapanis: 8 }, feedback: 'Satışı erteliyorsun = kayıp.', isBest: false },
+                    ],
+                },
+            ],
+        },
+
+        // ===== İADE/ŞİKAYET =====
+        {
+            category: 'IADE_SIKAYET',
+            title: 'Standart İade — 14 Gün İçinde',
+            description: 'Müşteri 14 gün içinde, fişle, kullanılmamış ürünü iade ediyor.',
+            difficulty: 'EASY',
+            xpReward: 30,
+            customerContext: 'Müşteri 5 gün önce aldığı mont ile geliyor. Fiş elinde, ürün etiketli ve kullanılmamış.',
+            steps: [
+                {
+                    npc: 'Bu montu 5 gün önce aldım, evde denedim ama eşim çok geniş geldiğini söyledi. İade etmek istiyorum.',
+                    choices: [
+                        { text: '"Tabii ki, hiç sorun değil. Fişiniz ve etiketli ürün var, hemen iade işlemini başlatıyorum. 2 dakika sürer. Bu arada bedeniniz hakkında bir öneri ister misiniz? Bizden bir beden küçüğünü denemek istemez miydiniz?" diyerek profesyonel iade + alternatif sunuyorum', scores: { empati: 25, bilgi: 22, caprazSatis: 22, kapanis: 25 }, feedback: 'Mükemmel — sorunsuz iade + kurtarma satışı.', isBest: true },
+                        { text: 'İadeyi yapıp hemen göndermek istiyorum, ek öneri yapmıyorum', scores: { empati: 18, bilgi: 18, caprazSatis: 5, kapanis: 18 }, feedback: 'Fırsat kaçtı — kurtarma satışı yapabilirdi.', isBest: false },
+                        { text: '"Niye? Kesin geniş mi geldi?" diye sorgulayıcı yaklaşıyorum', scores: { empati: 5, bilgi: 12, caprazSatis: 8, kapanis: 8 }, feedback: 'Sorgulayıcı = müşteri kızar.', isBest: false },
+                        { text: '"Müdüre sorayım" diyerek bekletiyorum', scores: { empati: 10, bilgi: 10, caprazSatis: 5, kapanis: 8 }, feedback: 'Standart iade için müdür gerek yok.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Tamam, bir beden küçüğünü deneyeyim. Aynı modelden var mı?',
+                    choices: [
+                        { text: '"Hemen bakıyorum… evet bir beden küçük (L) stokta var, hatta 2 farklı renkte. İade ettiğiniz tutar tamamen yeni ürüne yansıtılır. Yeni modeli getireyim mi?" diyerek satışı kurtarıyorum', scores: { empati: 25, bilgi: 25, caprazSatis: 25, kapanis: 25 }, feedback: 'Mükemmel — iade fırsata dönüştü.', isBest: true },
+                        { text: 'Bedeni bilmiyorum, "depodan bakayım" diyerek bekletiyorum', scores: { empati: 12, bilgi: 8, caprazSatis: 10, kapanis: 12 }, feedback: 'Stok bilgisi anında olmalı.', isBest: false },
+                        { text: 'Aynı modeli önermeyip farklı bir markaya yönlendiriyorum', scores: { empati: 10, bilgi: 15, caprazSatis: 15, kapanis: 12 }, feedback: 'Müşteri zaten markaya bağlı.', isBest: false },
+                        { text: '"Önce iade tamamlansın, sonra bakarız" diyerek süreci yavaşlatıyorum', scores: { empati: 12, bilgi: 12, caprazSatis: 5, kapanis: 10 }, feedback: 'Paralel işle, satış kaçırma.', isBest: false },
+                    ],
+                },
+            ],
+        },
+        {
+            category: 'IADE_SIKAYET',
+            title: 'Defektli Ürün Şikayeti',
+            description: 'Müşteri 1 hafta önce aldığı ayakkabıda dikiş söküğü tespit etti.',
+            difficulty: 'MEDIUM',
+            xpReward: 60,
+            customerContext: 'Müşteri sinirli, ayakkabıyı gösteriyor — sol ayağın dikişinde belirgin sökülme var.',
+            steps: [
+                {
+                    npc: 'Bakın, daha 1 hafta oldu ve dikiş söküldü! Bu mu kalite?',
+                    choices: [
+                        { text: '"Çok özür dilerim, bu kesinlikle olmaması gereken bir durum. Hemen değişiyoruz — yeni çift size getirilecek ve üstüne %10 indirim üzerinden gelecek alışverişinizde kullanmanız için kupon veriyorum" diyerek empatik+somut tazminat sunuyorum', scores: { empati: 25, bilgi: 22, caprazSatis: 22, kapanis: 25 }, feedback: 'Mükemmel — sorumluluk + ekstra değer.', isBest: true },
+                        { text: '"Üretim hatası olmalı, üreticiye iletip dönüş yapacağız" diyerek erteliyorum', scores: { empati: 10, bilgi: 15, caprazSatis: 5, kapanis: 10 }, feedback: 'Bekletme = kayıp müşteri.', isBest: false },
+                        { text: '"Yanlış kullanım olabilir, garanti dışı" diyerek savunmaya geçiyorum', scores: { empati: 0, bilgi: 12, caprazSatis: 0, kapanis: 5 }, feedback: 'Müşteri patlayacak — felaket.', isBest: false },
+                        { text: 'Sadece değişimi yapıp ek bir şey önermiyorum', scores: { empati: 22, bilgi: 20, caprazSatis: 10, kapanis: 22 }, feedback: 'Müşteri tatmin oldu ama bağlılık artmadı.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Tamam değişin ama bir daha bu marka almam. Başka bir önerin var mı?',
+                    choices: [
+                        { text: '"Anlıyorum. Adidas Ultraboost benzer rahatlıkta, çok daha sağlam. Hatta aynı fiyat segmentinde. Üstüne %10 indirim kuponunuz da var. Denemek ister misiniz?" diyerek alternatif marka öneriyorum', scores: { empati: 25, bilgi: 25, caprazSatis: 22, kapanis: 25 }, feedback: 'Mükemmel — alternatif + kupon kullanımı.', isBest: true },
+                        { text: '"Tabii, sadece kasaya gidelim" diyerek standart değişim yapıyorum', scores: { empati: 18, bilgi: 15, caprazSatis: 5, kapanis: 18 }, feedback: 'Fırsat kaçtı.', isBest: false },
+                        { text: '"Pahalı modelleri öneriyorum, kalite garantili" diyorum', scores: { empati: 12, bilgi: 15, caprazSatis: 18, kapanis: 12 }, feedback: 'Bütçeyi anlamadan üst-satış.', isBest: false },
+                        { text: '"Bilemiyorum, gezerek bakın" diyerek pasif kalıyorum', scores: { empati: 8, bilgi: 5, caprazSatis: 5, kapanis: 8 }, feedback: 'Pasif kayıp.', isBest: false },
+                    ],
+                },
+            ],
+        },
+        {
+            category: 'IADE_SIKAYET',
+            title: 'Süre Dışı İade Talebi',
+            description: '40 gün önce alınan ürün için iade talebi — yasal süre dışı.',
+            difficulty: 'HARD',
+            xpReward: 80,
+            customerContext: 'Müşteri 40 gün önce aldığı mont ile geliyor. Fiş elinde ama 14 gün iade süresi geçmiş. Müşteri bunu bilmiyor.',
+            steps: [
+                {
+                    npc: '40 gün önce aldığım bu montu beğenmedim, iade etmek istiyorum. Fişim var.',
+                    choices: [
+                        { text: '"Anlıyorum. Maalesef yasal iade süremiz 14 gün, bu nedenle direkt iade yapamıyorum. Ancak şu çözümleri sunabilirim: 1) Aynı tutarda mağaza kredisi, 2) Farklı bir ürünle değişim, 3) Müdürle özel çözüm. Hangisi sizin için uygun?" diyerek empatik ve seçenekli yaklaşıyorum', scores: { empati: 25, bilgi: 25, caprazSatis: 22, kapanis: 25 }, feedback: 'Mükemmel — kural + esnek çözüm.', isBest: true },
+                        { text: '"Maalesef süresi geçmiş, hiçbir şey yapamam" diyerek katı duruyorum', scores: { empati: 5, bilgi: 18, caprazSatis: 0, kapanis: 5 }, feedback: 'Müşteri kayıp — esneklik şart.', isBest: false },
+                        { text: 'Hiçbir şey söylemeden iadeyi yapıyorum (kural ihlali)', scores: { empati: 18, bilgi: 5, caprazSatis: 5, kapanis: 18 }, feedback: 'Kural ihlali — sorumlu olunur.', isBest: false },
+                        { text: '"Müdüre sorayım" diyerek beklemesini söylüyorum', scores: { empati: 15, bilgi: 12, caprazSatis: 8, kapanis: 12 }, feedback: 'Önce kendin seçenek sunabilirdin.', isBest: false },
+                    ],
+                },
+                {
+                    npc: 'Mağaza kredisi olabilir. Hangi ürünleri alabilirim?',
+                    choices: [
+                        { text: '"Tüm mağaza ürünleri kullanabilir, son geçerlilik 90 gün. Ben size birkaç model önereyim — mont kredinizi belki bir kayak başlığı veya termal iç giyim setine kullanabilirsiniz, başka bir tema deneyimi" diyerek pratik ürün öneriyorum', scores: { empati: 25, bilgi: 25, caprazSatis: 25, kapanis: 25 }, feedback: 'Mükemmel — kredi + alternatif tema önerisi.', isBest: true },
+                        { text: '"Mağazada bakın, fiyat etiketinden seçin" diyerek bırakıyorum', scores: { empati: 12, bilgi: 8, caprazSatis: 5, kapanis: 10 }, feedback: 'Refakat şart.', isBest: false },
+                        { text: 'Sadece aynı kategoriden mont öneriyorum', scores: { empati: 15, bilgi: 18, caprazSatis: 12, kapanis: 15 }, feedback: 'Aynı tip ürünü beğenmedi zaten.', isBest: false },
+                        { text: '"Listede tüm ürünler var, kendiniz bakın" diyerek belge gösteriyorum', scores: { empati: 8, bilgi: 12, caprazSatis: 8, kapanis: 8 }, feedback: 'Müşteriye yük yükledin.', isBest: false },
+                    ],
+                },
+            ],
+        },
+    ];
+
+    let scenarioCount = 0;
+    for (const s of simScenarios) {
+        await prisma.simScenario.create({
+            data: {
+                id: uuidv4(),
+                category: s.category,
+                title: s.title,
+                description: s.description,
+                difficulty: s.difficulty,
+                xpReward: s.xpReward,
+                customerContext: s.customerContext,
+                steps: JSON.stringify(s.steps),
+                isActive: true,
+                sortOrder: scenarioCount,
+            },
+        });
+        scenarioCount++;
+    }
+    console.log(`  ✓ ${scenarioCount} satış simülasyonu senaryosu oluşturuldu (5 kategoride)`);
+
+    // =====================================================================
     // GAMIFICATION — Rozetler (DEFAULT_BADGES)
     // =====================================================================
     const DEFAULT_BADGES = [

@@ -241,12 +241,46 @@ export default function SimulationsPage() {
                             </div>
                         ) : filteredScenarios.length === 0 ? (
                             <div style={{
-                                padding: 40, textAlign: 'center',
-                                background: 'var(--glass-bg)', borderRadius: 16,
-                                border: '1px dashed var(--card-border)',
+                                padding: 50, textAlign: 'center',
+                                background: 'linear-gradient(135deg, rgba(229, 57, 53, 0.04), rgba(229, 57, 53, 0.01))',
+                                borderRadius: 16,
+                                border: `2px dashed ${activeCatMeta.color}40`,
                             }}>
-                                <span className="material-icons-outlined" style={{ fontSize: '3rem', color: 'var(--text-tertiary)' }}>theater_comedy</span>
-                                <h3 style={{ margin: '8px 0 4px', color: 'var(--text-primary)' }}>Bu kategoride senaryo yok</h3>
+                                <div style={{
+                                    width: 80, height: 80, borderRadius: '50%',
+                                    background: activeCatMeta.gradient,
+                                    margin: '0 auto 16px',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    boxShadow: `0 8px 24px ${activeCatMeta.color}40`,
+                                }}>
+                                    <span className="material-icons-outlined" style={{ fontSize: '2.4rem', color: '#fff' }}>{activeCatMeta.icon}</span>
+                                </div>
+                                <h3 style={{ margin: '0 0 8px', fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    {activeCatMeta.label} kategorisinde senaryo yakında!
+                                </h3>
+                                <p style={{ margin: '0 0 20px', fontSize: '0.88rem', color: 'var(--text-secondary)', maxWidth: 460, marginLeft: 'auto', marginRight: 'auto', lineHeight: 1.5 }}>
+                                    Bu kategoride henüz senaryo eklenmemiş. Sistem yöneticin senaryolar ekledikçe burada görünecek.
+                                    Bu sırada diğer kategorileri keşfedebilirsin!
+                                </p>
+                                <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
+                                    {CATEGORIES.filter(c => c.key !== activeCat && (data?.scenarios || []).some(s => s.category === c.key)).slice(0, 3).map(c => (
+                                        <button
+                                            key={c.key}
+                                            onClick={() => setActiveCat(c.key)}
+                                            style={{
+                                                padding: '8px 14px',
+                                                background: c.gradient,
+                                                color: '#fff', border: 'none', borderRadius: 10,
+                                                fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
+                                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                                boxShadow: `0 4px 12px ${c.color}40`,
+                                            }}
+                                        >
+                                            <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>{c.icon}</span>
+                                            {c.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         ) : (
                             <div style={{ display: 'grid', gap: 10 }}>
@@ -273,11 +307,46 @@ export default function SimulationsPage() {
                             </h2>
                             {(!data?.recent || data.recent.length === 0) ? (
                                 <div style={{
-                                    padding: 22, textAlign: 'center',
-                                    background: 'var(--glass-bg)', borderRadius: 12,
-                                    border: '1px dashed var(--card-border)', color: 'var(--text-tertiary)',
-                                    fontSize: '0.88rem',
-                                }}>Henüz bir simülasyon denemedin. Hemen başla!</div>
+                                    padding: '32px 22px', textAlign: 'center',
+                                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.04), rgba(139, 92, 246, 0.02))',
+                                    borderRadius: 14,
+                                    border: '1px dashed rgba(99, 102, 241, 0.25)',
+                                }}>
+                                    <div style={{
+                                        width: 56, height: 56, borderRadius: '50%',
+                                        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                        margin: '0 auto 12px',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        boxShadow: '0 6px 16px rgba(99, 102, 241, 0.35)',
+                                    }}>
+                                        <span className="material-icons-outlined" style={{ fontSize: '1.6rem', color: '#fff' }}>rocket_launch</span>
+                                    </div>
+                                    <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                                        İlk simülasyonun seni bekliyor!
+                                    </div>
+                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-tertiary)', maxWidth: 420, margin: '0 auto 12px' }}>
+                                        Yukarıdan bir kategori ve senaryo seç. Her tamamladığın simülasyonla <strong style={{ color: '#f59e0b' }}>XP kazan</strong>, rozet topla, becerini geliştir.
+                                    </div>
+                                    {(data?.scenarios || []).length > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                const first = (data!.scenarios || [])[0];
+                                                if (first) router.push(`/simulations/${first.id}`);
+                                            }}
+                                            style={{
+                                                padding: '10px 20px',
+                                                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                                color: '#fff', border: 'none', borderRadius: 10,
+                                                fontSize: '0.88rem', fontWeight: 700, cursor: 'pointer',
+                                                display: 'inline-flex', alignItems: 'center', gap: 6,
+                                                boxShadow: '0 6px 16px rgba(99, 102, 241, 0.35)',
+                                            }}
+                                        >
+                                            <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>play_circle</span>
+                                            Hemen Başla
+                                        </button>
+                                    )}
+                                </div>
                             ) : (
                                 <div style={{ display: 'grid', gap: 8 }}>
                                     {data.recent.slice(0, 5).map(r => (
