@@ -1,0 +1,21 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env*
+!.env.example
+*.md
+.vscode
+.idea
+.claude
+public/screenshots
+prisma/dev.db
+prisma/dev.db-journal
+prisma/dev.db.sqlite-backup
+*.mp4
+*.mov
+*.log
+coverage
+Personel Detay
+PERAKENDE KPI GÜNCEL.xlsx

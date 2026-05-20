@@ -12,7 +12,7 @@ export async function POST(req: Request) {
 
     const quiz = await prisma.quiz.findUnique({
         where: { id: quizId },
-        include: { questions: true, training: { select: { minPassRate: true, title: true } } },
+        include: { questions: true, training: { select: { id: true, minPassRate: true, title: true } } },
     });
 
     if (!quiz) return NextResponse.json({ error: 'Quiz not found' }, { status: 404 });
@@ -97,7 +97,8 @@ export async function POST(req: Request) {
                 data: {
                     userId: user.id,
                     action: 'AUTO_RETRY_TRAINING',
-                    resource: 'training',
+                    entity: 'Training',
+                    entityId: quiz.training?.id,
                     details: `"${quiz.training?.title}" eğitiminde %${score} alındı (min: %${minPass}). Otomatik tekrar atandı.`,
                 },
             });

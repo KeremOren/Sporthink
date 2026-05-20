@@ -7,6 +7,18 @@ const path = require('path');
 const prisma = new PrismaClient();
 
 async function main() {
+    // =====================================================================
+    // PRODUCTION GUARD — yanlışlıkla canlı veriyi silmemek için
+    // =====================================================================
+    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_PRODUCTION_SEED !== 'YES_I_AM_SURE') {
+        console.error('🛑 GÜVENLİK: Production ortamında seed çalıştırılamaz!');
+        console.error('   Bu komut TÜM VERİYİ SİLER ve örnek verilerle değiştirir.');
+        console.error('');
+        console.error('   Eğer GERÇEKTEN istiyorsan: ALLOW_PRODUCTION_SEED=YES_I_AM_SURE node prisma/seed.js');
+        console.error('   Ama bu canlı DB ise → İPTAL ET, geri alınamaz!');
+        process.exit(1);
+    }
+
     console.log('🌱 Seeding database with REAL data...');
 
     // Clean existing data (order matters for FK constraints)

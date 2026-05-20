@@ -151,7 +151,8 @@ export async function GET(req: Request) {
             const trendPct = prev > 0 ? Math.round(((latest - prev) / prev) * 1000) / 10 : 0;
             // Target: per-store target * store count for non-% KPIs, raw target for %
             const storeCount = filterStoreId ? 1 : Math.max(1, totalStores);
-            const target = isPercent ? def.targetValue : def.targetValue * storeCount;
+            const baseTarget = def.targetValue ?? 0;
+            const target = isPercent ? baseTarget : baseTarget * storeCount;
             const achievement = target > 0 ? Math.round((latest / target) * 1000) / 10 : 0;
             return {
                 id: def.id,
