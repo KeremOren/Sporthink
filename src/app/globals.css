@@ -2500,13 +2500,11 @@ tr:hover td {
    NOTIFICATION DROPDOWN V2 — beautiful empty state + gradient header
    ===================================================================== */
 
-/* Subtle backdrop behind dropdown */
+/* Subtle backdrop behind dropdown — neredeyse görünmez */
 .notification-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.04);
   z-index: 9998;
   animation: notif-backdrop-fade 0.2s ease;
   cursor: default;
@@ -2518,15 +2516,74 @@ tr:hover td {
 }
 
 .notification-dropdown-v2 {
-  width: 380px;
-  max-height: 540px;
-  border-radius: 18px;
-  border: 1px solid rgba(229, 57, 53, 0.12);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22), 0 4px 16px rgba(229, 57, 53, 0.1);
+  width: 340px;
+  max-height: 440px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   background: var(--bg-secondary);
-  animation: notif-slide-in-right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: notif-slide-in-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   transform-origin: top right;
+}
+
+/* Compact empty state — minimal ve şık */
+.notif-empty-compact {
+  padding: 32px 22px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.notif-empty-icon-sm {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(229, 57, 53, 0.08), rgba(229, 57, 53, 0.03));
+  border: 1px solid rgba(229, 57, 53, 0.12);
+  color: rgba(229, 57, 53, 0.7);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.notif-empty-icon-sm .material-icons-outlined {
+  font-size: 1.5rem;
+}
+
+.notif-empty-text-sm {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.notif-empty-sub-sm {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+}
+
+.notif-empty-cta-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 14px;
+  background: rgba(229, 57, 53, 0.08);
+  color: #E53935;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid rgba(229, 57, 53, 0.18);
+  transition: all 0.15s;
+}
+
+.notif-empty-cta-sm:hover {
+  background: rgba(229, 57, 53, 0.14);
+  transform: translateY(-1px);
 }
 
 @keyframes notif-slide-in-right {
@@ -2564,41 +2621,31 @@ tr:hover td {
   }
 }
 
-/* Gradient header */
+/* Compact header — sade kırmızı şerit */
 .notification-dropdown-header-v2 {
   position: relative;
-  padding: 16px 18px;
+  padding: 12px 16px;
   overflow: hidden;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .notif-header-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #E53935 0%, #c62828 60%, #8b0000 100%);
+  background: linear-gradient(135deg, #E53935 0%, #c62828 100%);
   z-index: 0;
 }
 
 .notif-header-bg::before {
   content: '';
   position: absolute;
-  top: -50px;
-  right: -40px;
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 70%);
-}
-
-.notif-header-bg::after {
-  content: '';
-  position: absolute;
-  bottom: -30px;
-  left: -20px;
+  top: -30px;
+  right: -20px;
   width: 100px;
   height: 100px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 70%);
+  pointer-events: none;
 }
 
 .notif-header-btn {

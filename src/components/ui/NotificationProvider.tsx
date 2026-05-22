@@ -124,9 +124,9 @@ export function NotificationBell() {
     // - Mobile (<640px): null pos → CSS media query handles bottom-sheet layout.
     const computePosition = () => {
         if (window.innerWidth < 640) return null;
-        const dropdownWidth = 380;
+        const dropdownWidth = 340; // Yeni kompakt boyut
         return {
-            top: 70,
+            top: 24,
             left: window.innerWidth - dropdownWidth - 20,
         };
     };
@@ -239,46 +239,16 @@ export function NotificationBell() {
                     {/* Body */}
                     <div className="notification-list">
                         {notifications.length === 0 ? (
-                            <div className="notification-empty-v2">
-                                {/* Decorative illustration */}
-                                <div className="notif-empty-illustration">
-                                    <div className="notif-empty-circle notif-empty-circle-1" />
-                                    <div className="notif-empty-circle notif-empty-circle-2" />
-                                    <div className="notif-empty-circle notif-empty-circle-3" />
-                                    <div className="notif-empty-bell">
-                                        <span className="material-icons-outlined">notifications_active</span>
-                                    </div>
+                            <div className="notif-empty-compact">
+                                <div className="notif-empty-icon-sm">
+                                    <span className="material-icons-outlined">notifications_none</span>
                                 </div>
-
-                                <h4 className="notif-empty-title">
-                                    Her şey yolunda! <span style={{ fontSize: '1.2rem' }}>🎉</span>
-                                </h4>
-                                <p className="notif-empty-desc">
-                                    Şu an okunmamış bildirimin yok.<br/>
-                                    Yeni eğitim ve duyurular burada görünecek.
-                                </p>
-
-                                {/* Sample preview cards */}
-                                <div className="notif-empty-samples">
-                                    <div className="notif-empty-sample-title">Burada görebileceklerin:</div>
-                                    <SampleRow icon="school" color="#6366f1" label="Yeni eğitim ataması" />
-                                    <SampleRow icon="trending_down" color="#dc2626" label="KPI anomali uyarısı" />
-                                    <SampleRow icon="auto_awesome" color="#8b5cf6" label="AI eğitim önerisi" />
-                                    <SampleRow icon="campaign" color="#0891b2" label="Yönetici duyurusu" />
-                                </div>
-
-                                {/* CTA: Push permission */}
+                                <div className="notif-empty-text-sm">Yeni bildirimin yok</div>
+                                <div className="notif-empty-sub-sm">Eğitim ve duyurular burada belirir</div>
                                 {pushPermission === 'default' && (
-                                    <a href="/profile?tab=settings" className="notif-empty-cta">
-                                        <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>notifications</span>
-                                        Push Bildirimleri Aç
+                                    <a href="/profile?tab=settings" className="notif-empty-cta-sm">
+                                        Push bildirimleri aç
                                     </a>
-                                )}
-                                {pushPermission === 'granted' && (
-                                    <div className="notif-empty-status">
-                                        <span className="material-icons-outlined" style={{ fontSize: '0.95rem', color: '#16a34a' }}>verified</span>
-                                        Push bildirimler aktif
-                                    </div>
                                 )}
                             </div>
                         ) : (
