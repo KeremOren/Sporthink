@@ -358,12 +358,28 @@ export default function PerformancePage() {
                             {/* ══════ SECTION 3: Detaylı Tablo ══════ */}
                             {(() => {
                                 const q = tableSearch.trim().toLowerCase();
-                                const filteredStores = q
-                                    ? data.stores.filter((s: any) =>
-                                        (s.storeName || '').toLowerCase().includes(q) ||
-                                        s.kpis.some((k: any) => (k.name || '').toLowerCase().includes(q))
-                                    )
-                                    : data.stores;
+                                // Tüm (store, kpi) satırlarını düzleştir + duplikatları temizle
+                                const allRows: Array<{ s: any; kpi: any }> = [];
+                                const seen = new Set<string>();
+                                for (const s of data.stores) {
+                                    for (const kpi of s.kpis) {
+                                        const key = `${s.storeId}__${kpi.name}`;
+                                        if (seen.has(key)) continue;
+                                        seen.add(key);
+                                        allRows.push({ s, kpi });
+                                    }
+                                }
+                                // Arama filtresi uygula
+                                const filteredRows = q
+                                    ? allRows.filter(({ s, kpi }) => {
+                                        const storeName = (s.storeName || '').toLowerCase();
+                                        const kpiName = (kpi.name || '').toLowerCase();
+                                        return storeName.includes(q) || kpiName.includes(q);
+                                    })
+                                    : allRows;
+                                // Eşsiz mağaza sayısı (sayaç için)
+                                const uniqueStoresAll = new Set(allRows.map(r => r.s.storeId)).size;
+                                const uniqueStoresFiltered = new Set(filteredRows.map(r => r.s.storeId)).size;
                                 return (
                             <div className="card" style={{ marginBottom: 28 }}>
                                 <div className="card-header" style={{ flexWrap: 'wrap', gap: 12 }}>
@@ -404,7 +420,7 @@ export default function PerformancePage() {
                                         )}
                                         {data.stores.length > 1 && (
                                             <span className="badge" style={{ background: 'var(--bg-tertiary)' }}>
-                                                {q ? `${filteredStores.length} / ${data.stores.length}` : `${data.stores.length}`} mağaza
+                                                {q ? `${uniqueStoresFiltered} / ${uniqueStoresAll}` : `${uniqueStoresAll}`} mağaza
                                             </span>
                                         )}
                                     </div>
@@ -423,24 +439,14 @@ export default function PerformancePage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredStores.length === 0 ? (
+                                            {filteredRows.length === 0 ? (
                                                 <tr>
                                                     <td colSpan={data.stores.length > 1 ? 7 : 6} style={{ textAlign: 'center', padding: '32px 12px', color: 'var(--text-tertiary)' }}>
                                                         <span className="material-icons-outlined" style={{ fontSize: '1.6rem', display: 'block', marginBottom: 4, opacity: 0.5 }}>search_off</span>
                                                         &quot;{tableSearch}&quot; için sonuç yok
                                                     </td>
                                                 </tr>
-                                            ) : filteredStores.flatMap((s: any) =>
-                                                // KPI bazında da filtrele — eğer arama KPI'da eşleşirse sadece o satır gelsin
-                                                s.kpis
-                                                    .filter((kpi: any) => {
-                                                        if (!q) return true;
-                                                        // Mağaza adı eşleşiyorsa tüm KPI'lar
-                                                        if ((s.storeName || '').toLowerCase().includes(q)) return true;
-                                                        // Aksi halde sadece eşleşen KPI'lar
-                                                        return (kpi.name || '').toLowerCase().includes(q);
-                                                    })
-                                                    .map((kpi: any) => {
+                                            ) : filteredRows.map(({ s, kpi }) => {
                                                     const diff = kpi.targetValue ? kpi.currentValue - kpi.targetValue : null;
                                                     const isInverse = kpi.name.includes('İade') || kpi.name.includes('Devamsızlık');
                                                     const diffPositive = isInverse ? (diff !== null && diff <= 0) : (diff !== null && diff >= 0);
@@ -482,8 +488,7 @@ export default function PerformancePage() {
                                                             </td>
                                                         </tr>
                                                     );
-                                                })
-                                            )}
+                                                })}
                                         </tbody>
                                     </table>
                                 </div>
