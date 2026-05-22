@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { awardXp, checkAndAwardBadges, XP_REWARDS } from '@/lib/gamification';
+import { notifyUser } from '@/lib/notify';
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
@@ -50,6 +52,33 @@ export async function POST(req: Request) {
                 comments: true,
             },
         });
+
+        // === XP + ROZET ===
+        await awardXp({
+            userId: user.id,
+            amount: XP_REWARDS.COMMUNITY_POST,
+            source: 'COMMUNITY_POST',
+            sourceId: post.id,
+            reason: 'Topluluk gönderisi paylaşıldı',
+        });
+        try {
+            const newBadges = await checkAndAwardBadges(user.id);
+            for (const code of newBadges) {
+                const badgeRow = await prisma.badge.findUnique({ where: { code } });
+                if (badgeRow) {
+                    notifyUser({
+                        userId: user.id,
+                        type: 'BADGE_EARNED',
+                        title: 'Yeni rozet kazandın! 🏆',
+                        message: `"${badgeRow.name}" — ${badgeRow.description}`,
+                        link: '/achievements',
+                    }).catch(() => {});
+                }
+            }
+        } catch (e) {
+            console.warn('[community] badge check failed:', e);
+        }
+
         return NextResponse.json(post, { status: 201 });
     }
 

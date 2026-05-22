@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { notifyUser } from '@/lib/notify';
+import { awardXp, checkAndAwardBadges, XP_REWARDS } from '@/lib/gamification';
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
@@ -101,6 +102,12 @@ export async function PUT(req: Request) {
         return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
+    // Önceki durumu al (XP çift verilmesini engellemek için)
+    const previousAssignment = await prisma.trainingAssignment.findUnique({
+        where: { id: assignmentId },
+        include: { training: { select: { id: true, title: true } } },
+    });
+
     const updateData: any = { status };
     if (status === 'IN_PROGRESS') updateData.startedAt = new Date();
     if (status === 'COMPLETED') updateData.completedAt = new Date();
@@ -110,5 +117,38 @@ export async function PUT(req: Request) {
         data: updateData,
     });
 
-    return NextResponse.json(assignment);
+    // === XP + ROZET ÖDÜLLERİ ===
+    let xpAwarded = 0;
+    let newBadges: string[] = [];
+    // Sadece ilk kez COMPLETED olunca XP ver (zaten COMPLETED ise tekrar verme)
+    if (status === 'COMPLETED' && previousAssignment && previousAssignment.status !== 'COMPLETED') {
+        await awardXp({
+            userId: previousAssignment.userId,
+            amount: XP_REWARDS.TRAINING_COMPLETE,
+            source: 'TRAINING_COMPLETE',
+            sourceId: previousAssignment.training?.id,
+            reason: `Eğitim tamamlandı: ${previousAssignment.training?.title || ''}`,
+        });
+        xpAwarded = XP_REWARDS.TRAINING_COMPLETE;
+
+        try {
+            newBadges = await checkAndAwardBadges(previousAssignment.userId);
+            for (const code of newBadges) {
+                const badge = await prisma.badge.findUnique({ where: { code } });
+                if (badge) {
+                    notifyUser({
+                        userId: previousAssignment.userId,
+                        type: 'BADGE_EARNED',
+                        title: 'Yeni rozet kazandın! 🏆',
+                        message: `"${badge.name}" — ${badge.description}`,
+                        link: '/achievements',
+                    }).catch(() => {});
+                }
+            }
+        } catch (e) {
+            console.warn('[training] badge check failed:', e);
+        }
+    }
+
+    return NextResponse.json({ ...assignment, xpAwarded, newBadges });
 }
