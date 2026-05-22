@@ -783,14 +783,14 @@ function AttemptDetailModal({ attempt, onClose }: { attempt: RecentAttempt; onCl
             <div
                 onClick={e => e.stopPropagation()}
                 style={{
-                    background: 'var(--card-bg)',
+                    background: '#ffffff',
+                    color: '#1f2937',
                     borderRadius: 24,
                     maxWidth: 720,
                     width: '100%',
                     maxHeight: '92vh',
                     overflowY: 'auto',
-                    boxShadow: '0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)',
-                    border: '1px solid var(--card-border)',
+                    boxShadow: '0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.08)',
                     overflow: 'hidden',
                 }}
             >
@@ -944,14 +944,14 @@ function AttemptDetailModal({ attempt, onClose }: { attempt: RecentAttempt; onCl
                 </div>
 
                 {/* Body */}
-                <div style={{ padding: 24 }}>
+                <div style={{ padding: 24, background: '#ffffff' }}>
                     {/* Section title */}
                     <div style={{
                         display: 'flex', alignItems: 'center', gap: 8,
-                        fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)',
+                        fontSize: '0.95rem', fontWeight: 700, color: '#1f2937',
                         marginBottom: 14,
                     }}>
-                        <span className="material-icons-outlined" style={{ fontSize: '1.1rem', color: 'var(--text-tertiary)' }}>analytics</span>
+                        <span className="material-icons-outlined" style={{ fontSize: '1.1rem', color: '#94a3b8' }}>analytics</span>
                         Beceri Analizi
                     </div>
 
@@ -986,7 +986,7 @@ function AttemptDetailModal({ attempt, onClose }: { attempt: RecentAttempt; onCl
                                     En Güçlü
                                 </span>
                             </div>
-                            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#1f2937' }}>
                                 {bestSkill.label} <span style={{ color: bestSkill.color }}>· {bestSkill.value}</span>
                             </div>
                         </div>
@@ -1002,7 +1002,7 @@ function AttemptDetailModal({ attempt, onClose }: { attempt: RecentAttempt; onCl
                                     Gelişim Alanı
                                 </span>
                             </div>
-                            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#1f2937' }}>
                                 {worstSkill.label} <span style={{ color: worstSkill.color }}>· {worstSkill.value}</span>
                             </div>
                         </div>
@@ -1011,14 +1011,15 @@ function AttemptDetailModal({ attempt, onClose }: { attempt: RecentAttempt; onCl
                     {/* Date footer */}
                     <div style={{
                         padding: '12px 14px',
-                        background: 'var(--bg-secondary)',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
                         borderRadius: 12,
                         fontSize: '0.82rem',
-                        color: 'var(--text-tertiary)',
+                        color: '#64748b',
                         display: 'flex', alignItems: 'center', gap: 8,
                     }}>
                         <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>event</span>
-                        Tamamlanma: <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{date}</strong>
+                        Tamamlanma: <strong style={{ color: '#1f2937', fontWeight: 600 }}>{date}</strong>
                     </div>
                 </div>
             </div>
@@ -1031,8 +1032,8 @@ function SkillCard({ label, icon, value, color }: { label: string; icon: string;
     return (
         <div style={{
             padding: 14,
-            background: 'var(--bg-secondary)',
-            border: '1px solid var(--card-border)',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
             borderRadius: 12,
             borderLeft: `4px solid ${color}`,
             transition: 'all 0.2s ease',
@@ -1046,7 +1047,7 @@ function SkillCard({ label, icon, value, color }: { label: string; icon: string;
                     }}>
                         <span className="material-icons-outlined" style={{ fontSize: '0.95rem', color }}>{icon}</span>
                     </div>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>{label}</span>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1f2937' }}>{label}</span>
                 </div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 900, color }}>
                     {value}
@@ -1055,7 +1056,7 @@ function SkillCard({ label, icon, value, color }: { label: string; icon: string;
             </div>
             <div style={{
                 height: 7, borderRadius: 4,
-                background: 'var(--bg-tertiary)',
+                background: '#e2e8f0',
                 overflow: 'hidden',
             }}>
                 <div style={{
