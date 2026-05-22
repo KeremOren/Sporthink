@@ -91,6 +91,22 @@ const KPI_TO_TRAINING_KEYWORDS: Record<string, { categories: string[]; titleKeyw
     },
 };
 
+// KPI → simülasyondaki beceri puanı (hedefleme için)
+// Bu becerinin ortalaması düşük olan çalışanlar önceliklendirilir
+const KPI_TO_SKILL: Record<string, 'empati' | 'bilgi' | 'capraz' | 'kapanis' | null> = {
+    'Aylık Ciro': 'capraz',           // ciro → çapraz satış
+    'Sepet Ortalaması': 'capraz',     // sepet → çapraz satış
+    'UPT': 'capraz',                  // birim/işlem → çapraz satış
+    'Tekli Fatura Oranı': 'capraz',   // tek ürünlü → çapraz satış geliştirilmeli
+    'Dönüşüm Oranı': 'kapanis',       // dönüşüm → kapanış
+    'Hedef Gerçekleşme Oranı': 'kapanis',
+    'Ürün Satış Adedi': 'bilgi',      // adet → ürün bilgisi
+    'Müşteri Memnuniyeti': 'empati',  // memnuniyet → empati
+};
+
+// Performans eşiği: bu becerideki ortalaması bu değerin ALTINDA olanlar hedeflenir
+const PERFORMANCE_THRESHOLD = 75;
+
 const ANOMALY_THRESHOLDS: Record<string, { medium: number; high: number; direction: 'down' | 'up' }> = {
     'Aylık Ciro':              { medium: 10, high: 20, direction: 'down' },
     'Ürün Satış Adedi':        { medium: 10, high: 20, direction: 'down' },
@@ -299,8 +315,8 @@ export async function POST(req: Request) {
         }
     }
 
-    // Target users
-    const employees = await prisma.user.findMany({
+    // Tüm aktif çalışanları al
+    const allEmployees = await prisma.user.findMany({
         where: {
             storeId,
             role: { in: ['EMPLOYEE', 'ASSISTANT_MANAGER'] },
@@ -309,22 +325,112 @@ export async function POST(req: Request) {
         select: { id: true, firstName: true, lastName: true },
     });
 
-    if (employees.length === 0) {
+    if (allEmployees.length === 0) {
         return NextResponse.json({ error: 'Atama yapılacak çalışan bulunamadı' }, { status: 404 });
+    }
+
+    // === PERFORMANSA GÖRE HEDEFLEME ===
+    // KPI'a göre ilgili beceriyi bul (capraz/kapanis/empati/bilgi)
+    const targetSkill = kpiName ? KPI_TO_SKILL[kpiName] : null;
+    const empIds = allEmployees.map(e => e.id);
+
+    // Her çalışanın son sim attempt'lerini çek (max 5 son deneme)
+    const recentAttempts = await prisma.simAttempt.findMany({
+        where: { userId: { in: empIds } },
+        select: {
+            userId: true,
+            empatiScore: true,
+            bilgiScore: true,
+            caprazSatisScore: true,
+            kapanisScore: true,
+            score: true,
+        },
+        orderBy: { completedAt: 'desc' },
+        take: 200, // bir mağazada toplam 200 deneme — yeterli
+    });
+
+    // Çalışan başına ortalama hesapla
+    type Perf = { count: number; avgRelevant: number; avgOverall: number };
+    const perfByUser: Record<string, Perf> = {};
+    for (const emp of allEmployees) perfByUser[emp.id] = { count: 0, avgRelevant: 0, avgOverall: 0 };
+
+    const accumulator: Record<string, { relSum: number; ovSum: number; n: number }> = {};
+    for (const emp of allEmployees) accumulator[emp.id] = { relSum: 0, ovSum: 0, n: 0 };
+
+    for (const a of recentAttempts) {
+        const acc = accumulator[a.userId];
+        if (!acc) continue;
+        if (acc.n >= 5) continue; // her kullanıcı için son 5 deneme
+        let relevant = a.score;
+        if (targetSkill === 'empati') relevant = a.empatiScore;
+        else if (targetSkill === 'bilgi') relevant = a.bilgiScore;
+        else if (targetSkill === 'capraz') relevant = a.caprazSatisScore;
+        else if (targetSkill === 'kapanis') relevant = a.kapanisScore;
+        acc.relSum += relevant;
+        acc.ovSum += a.score;
+        acc.n += 1;
+    }
+
+    // Hedef listesini oluştur
+    const targeted: Array<{
+        id: string;
+        firstName: string;
+        lastName: string;
+        reason: 'NO_DATA' | 'LOW_SKILL';
+        relevantScore: number | null;
+    }> = [];
+
+    for (const emp of allEmployees) {
+        const acc = accumulator[emp.id];
+        if (acc.n === 0) {
+            // Hiç simülasyon yapmamış → eğitimden faydalanır
+            targeted.push({
+                id: emp.id,
+                firstName: emp.firstName,
+                lastName: emp.lastName,
+                reason: 'NO_DATA',
+                relevantScore: null,
+            });
+        } else {
+            const avgRelevant = acc.relSum / acc.n;
+            if (avgRelevant < PERFORMANCE_THRESHOLD) {
+                targeted.push({
+                    id: emp.id,
+                    firstName: emp.firstName,
+                    lastName: emp.lastName,
+                    reason: 'LOW_SKILL',
+                    relevantScore: Math.round(avgRelevant),
+                });
+            }
+        }
+    }
+
+    if (targeted.length === 0) {
+        return NextResponse.json({
+            success: true,
+            created: 0,
+            skipped: 0,
+            totalEmployees: allEmployees.length,
+            targetedUsers: [],
+            message: 'Bu mağazadaki tüm çalışanlar bu beceride yeterli performansta — atama yapılmadı.',
+        });
     }
 
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + 14); // 2 hafta süre
 
+    const assignedUsers: typeof targeted = [];
+    const skippedUsers: typeof targeted = [];
     let created = 0;
     let skipped = 0;
-    for (const emp of employees) {
-        // Check if already assigned
+    for (const emp of targeted) {
+        // Zaten atanmış mı?
         const existing = await prisma.trainingAssignment.findUnique({
             where: { trainingId_userId: { trainingId, userId: emp.id } },
         });
         if (existing) {
             skipped++;
+            skippedUsers.push(emp);
             continue;
         }
         await prisma.trainingAssignment.create({
@@ -338,6 +444,7 @@ export async function POST(req: Request) {
             },
         });
         created++;
+        assignedUsers.push(emp);
     }
 
     // Audit log
@@ -347,15 +454,22 @@ export async function POST(req: Request) {
             userId: user.id,
             action: 'AI_TRAINING_RECOMMENDED',
             entity: 'TrainingAssignment',
-            details: JSON.stringify({ storeId, trainingId, kpiName, created, skipped, reason: 'Anomali tespiti sonrası otomatik öneri' }),
+            details: JSON.stringify({
+                storeId, trainingId, kpiName,
+                targetSkill, threshold: PERFORMANCE_THRESHOLD,
+                totalEmployees: allEmployees.length,
+                targeted: targeted.length,
+                created, skipped,
+                reason: 'Performansa göre hedeflenmiş öneri',
+                assignedNames: assignedUsers.map(u => `${u.firstName} ${u.lastName}`),
+            }),
         },
     });
 
     // Atanan personele bildirim gönder (DB + push, fire-and-forget)
-    if (created > 0) {
+    if (assignedUsers.length > 0) {
         const training = await prisma.training.findUnique({ where: { id: trainingId }, select: { title: true } });
-        const newlyAssigned = employees.slice(0, created).map(e => e.id);
-        notifyUsers(newlyAssigned, {
+        notifyUsers(assignedUsers.map(u => u.id), {
             type: 'AI_RECOMMENDATION',
             title: 'AI yeni eğitim atadı',
             message: `"${training?.title || 'Yeni eğitim'}" — ${kpiName || 'KPI'} gelişiminiz için önerildi.`,
@@ -363,11 +477,23 @@ export async function POST(req: Request) {
         }).catch(() => {});
     }
 
+    const skillLabel: Record<string, string> = {
+        empati: 'Empati',
+        bilgi: 'Ürün Bilgisi',
+        capraz: 'Çapraz Satış',
+        kapanis: 'Kapanış',
+    };
+    const skillText = targetSkill ? skillLabel[targetSkill] : 'genel performans';
+
     return NextResponse.json({
         success: true,
         created,
         skipped,
-        totalEmployees: employees.length,
-        message: `${created} çalışana eğitim atandı, ${skipped} kişide zaten mevcuttu.`,
+        targetSkill,
+        threshold: PERFORMANCE_THRESHOLD,
+        totalEmployees: allEmployees.length,
+        targetedUsers: assignedUsers,
+        skippedUsers,
+        message: `${allEmployees.length} çalışan içinden ${skillText} performansı düşük ${assignedUsers.length} kişiye atama yapıldı${skipped > 0 ? ` (${skipped} kişide zaten mevcuttu)` : ''}.`,
     });
 }

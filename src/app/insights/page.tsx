@@ -70,6 +70,7 @@ export default function InsightsPage() {
     const [applyingId, setApplyingId] = useState<string | null>(null);
     const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
     const [tab, setTab] = useState<'anomalies' | 'recommendations'>('anomalies');
+    const [resultModal, setResultModal] = useState<any>(null);
 
     useEffect(() => { document.title = 'Sporthink | AI İçgörüler'; }, []);
 
@@ -101,6 +102,13 @@ export default function InsightsPage() {
             if (!res.ok) throw new Error(data.error || 'Hata');
             showToast(data.message || 'Atama tamamlandı', 'success');
             setAppliedIds(new Set([...appliedIds, rec.id]));
+            // Atama sonucu modal'ı aç — kimin atandığını göster
+            setResultModal({
+                ...data,
+                trainingTitle: rec.training.title,
+                storeName: rec.storeName,
+                kpiName: rec.kpiName,
+            });
         } catch (e: any) {
             showToast(e.message || 'Atama başarısız', 'error');
         } finally {
@@ -374,7 +382,227 @@ export default function InsightsPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Atama Sonucu Modal */}
+                {resultModal && (
+                    <AssignmentResultModal data={resultModal} onClose={() => setResultModal(null)} />
+                )}
             </main>
+        </div>
+    );
+}
+
+// ==================== Atama Sonucu Modal ====================
+function AssignmentResultModal({ data, onClose }: { data: any; onClose: () => void }) {
+    const skillLabels: Record<string, { label: string; color: string; icon: string }> = {
+        empati: { label: 'Empati', color: '#ec4899', icon: 'favorite' },
+        bilgi: { label: 'Ürün Bilgisi', color: '#3b82f6', icon: 'school' },
+        capraz: { label: 'Çapraz Satış', color: '#8b5cf6', icon: 'sync_alt' },
+        kapanis: { label: 'Kapanış', color: '#22c55e', icon: 'flag' },
+    };
+    const skill = data.targetSkill ? skillLabels[data.targetSkill] : null;
+    const assigned = data.targetedUsers || [];
+    const skippedAlreadyAssigned = data.skippedUsers || [];
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [onClose]);
+
+    return (
+        <div
+            onClick={onClose}
+            style={{
+                position: 'fixed', inset: 0, zIndex: 1000,
+                background: 'rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: 20,
+                overflowY: 'auto',
+            }}
+        >
+            <div
+                onClick={e => e.stopPropagation()}
+                style={{
+                    background: '#ffffff',
+                    color: '#1f2937',
+                    borderRadius: 20,
+                    maxWidth: 640,
+                    width: '100%',
+                    maxHeight: '90vh',
+                    overflowY: 'auto',
+                    boxShadow: '0 40px 100px rgba(0,0,0,0.5)',
+                    overflow: 'hidden',
+                }}
+            >
+                {/* Header */}
+                <div style={{
+                    padding: '22px 24px',
+                    background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                    color: '#fff', position: 'relative',
+                }}>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            position: 'absolute', top: 14, right: 14,
+                            width: 32, height: 32, borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.25)',
+                            color: '#fff', border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                    >
+                        <span className="material-icons-outlined" style={{ fontSize: '1.2rem' }}>close</span>
+                    </button>
+                    <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: 2, opacity: 0.85, marginBottom: 4 }}>
+                        AI Önerisi Uygulandı
+                    </div>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 800, marginBottom: 4 }}>
+                        {data.trainingTitle}
+                    </div>
+                    <div style={{ fontSize: '0.82rem', opacity: 0.9 }}>
+                        📍 {data.storeName} · 📊 {data.kpiName}
+                    </div>
+                </div>
+
+                {/* Stats row */}
+                <div style={{ padding: 20, borderBottom: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                        <div style={{ padding: 12, background: '#f0fdf4', borderRadius: 10, border: '1px solid #bbf7d0' }}>
+                            <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: '#16a34a', fontWeight: 700, letterSpacing: 0.5 }}>Atandı</div>
+                            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#16a34a', lineHeight: 1 }}>{data.created}</div>
+                        </div>
+                        <div style={{ padding: 12, background: '#fef3c7', borderRadius: 10, border: '1px solid #fde68a' }}>
+                            <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: '#d97706', fontWeight: 700, letterSpacing: 0.5 }}>Zaten Vardı</div>
+                            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#d97706', lineHeight: 1 }}>{data.skipped}</div>
+                        </div>
+                        <div style={{ padding: 12, background: '#eff6ff', borderRadius: 10, border: '1px solid #bfdbfe' }}>
+                            <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: '#2563eb', fontWeight: 700, letterSpacing: 0.5 }}>Toplam Personel</div>
+                            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#2563eb', lineHeight: 1 }}>{data.totalEmployees}</div>
+                        </div>
+                    </div>
+
+                    {/* Targeting explanation */}
+                    <div style={{
+                        marginTop: 12,
+                        padding: '10px 12px',
+                        background: '#faf5ff',
+                        border: '1px solid #e9d5ff',
+                        borderRadius: 10,
+                        fontSize: '0.8rem',
+                        color: '#6b21a8',
+                        display: 'flex', alignItems: 'center', gap: 8,
+                    }}>
+                        <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>psychology</span>
+                        <div>
+                            <strong>Hedefleme:</strong> {skill ? `${skill.label} becerisi` : 'Genel performans'} ortalaması <strong>%{data.threshold || 75}'in altında</strong> olan çalışanlar seçildi.
+                        </div>
+                    </div>
+                </div>
+
+                {/* Assigned users list */}
+                <div style={{ padding: 20 }}>
+                    {assigned.length === 0 ? (
+                        <div style={{ padding: 30, textAlign: 'center', color: '#64748b' }}>
+                            <span className="material-icons-outlined" style={{ fontSize: '2rem', display: 'block', marginBottom: 6, opacity: 0.5 }}>check_circle</span>
+                            <div style={{ fontWeight: 600 }}>Bu mağazada hedef kitleye uyan çalışan bulunamadı.</div>
+                            <div style={{ fontSize: '0.82rem', marginTop: 4 }}>Hepsi yeterli performansta veya zaten atanmış.</div>
+                        </div>
+                    ) : (
+                        <>
+                            <div style={{
+                                fontSize: '0.78rem', fontWeight: 700, color: '#1f2937',
+                                marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6,
+                            }}>
+                                <span className="material-icons-outlined" style={{ fontSize: '1rem', color: '#16a34a' }}>group_add</span>
+                                Eğitim Atanan Çalışanlar ({assigned.length})
+                            </div>
+                            <div style={{ display: 'grid', gap: 6, maxHeight: 240, overflowY: 'auto' }}>
+                                {assigned.map((u: any) => (
+                                    <div key={u.id} style={{
+                                        display: 'flex', alignItems: 'center', gap: 10,
+                                        padding: '8px 12px',
+                                        background: '#f8fafc',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 8,
+                                    }}>
+                                        <div style={{
+                                            width: 32, height: 32, borderRadius: '50%',
+                                            background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                                            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: '0.7rem', fontWeight: 700, flexShrink: 0,
+                                        }}>
+                                            {u.firstName?.[0]}{u.lastName?.[0]}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1f2937' }}>
+                                                {u.firstName} {u.lastName}
+                                            </div>
+                                            <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+                                                {u.reason === 'NO_DATA'
+                                                    ? '🆕 Hiç simülasyon yapmamış'
+                                                    : `📉 ${skill?.label || 'Skor'} ortalaması: ${u.relevantScore}/100`}
+                                            </div>
+                                        </div>
+                                        {u.reason === 'LOW_SKILL' && u.relevantScore != null && (
+                                            <div style={{
+                                                padding: '3px 8px',
+                                                background: '#fee2e2',
+                                                color: '#dc2626',
+                                                borderRadius: 999,
+                                                fontSize: '0.7rem',
+                                                fontWeight: 700,
+                                            }}>
+                                                {u.relevantScore} / 100
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+
+                    {/* Skipped users */}
+                    {skippedAlreadyAssigned.length > 0 && (
+                        <div style={{ marginTop: 14 }}>
+                            <div style={{
+                                fontSize: '0.78rem', fontWeight: 700, color: '#64748b',
+                                marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6,
+                            }}>
+                                <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>info</span>
+                                Zaten Atanmış Olanlar ({skippedAlreadyAssigned.length})
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: '#64748b', lineHeight: 1.5 }}>
+                                {skippedAlreadyAssigned.map((u: any) => `${u.firstName} ${u.lastName}`).join(', ')}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Footer */}
+                <div style={{
+                    padding: '14px 20px',
+                    background: '#f8fafc',
+                    borderTop: '1px solid #e2e8f0',
+                    display: 'flex', justifyContent: 'flex-end',
+                }}>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            padding: '8px 18px',
+                            background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
+                            color: '#fff', border: 'none',
+                            borderRadius: 8,
+                            fontSize: '0.85rem', fontWeight: 700,
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 12px rgba(139,92,246,0.3)',
+                        }}
+                    >
+                        Tamam
+                    </button>
+                </div>
+            </div>
         </div>
     );
 }
