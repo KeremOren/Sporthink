@@ -333,7 +333,7 @@ export default function SimulationsPage() {
 
                         {/* Recent Results */}
                         <div className="cine-fadeInUp" style={{ marginTop: 28 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
                                 <h2 style={{
                                     fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)',
                                     margin: 0, display: 'flex', alignItems: 'center', gap: 8,
@@ -350,27 +350,28 @@ export default function SimulationsPage() {
                                     <button
                                         onClick={() => setConfirmClear(true)}
                                         style={{
-                                            padding: '6px 12px',
-                                            background: 'transparent',
-                                            color: '#ef4444',
-                                            border: '1px solid rgba(239,68,68,0.3)',
+                                            padding: '7px 14px',
+                                            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                            color: '#fff',
+                                            border: 'none',
                                             borderRadius: 8,
-                                            fontSize: '0.78rem', fontWeight: 600,
+                                            fontSize: '0.8rem', fontWeight: 700,
                                             cursor: 'pointer',
-                                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                                            display: 'inline-flex', alignItems: 'center', gap: 6,
                                             transition: 'all 0.2s ease',
+                                            boxShadow: '0 3px 10px rgba(239,68,68,0.3)',
                                         }}
                                         onMouseEnter={e => {
-                                            e.currentTarget.style.background = 'rgba(239,68,68,0.08)';
-                                            e.currentTarget.style.borderColor = '#ef4444';
+                                            e.currentTarget.style.transform = 'translateY(-1px)';
+                                            e.currentTarget.style.boxShadow = '0 5px 14px rgba(239,68,68,0.45)';
                                         }}
                                         onMouseLeave={e => {
-                                            e.currentTarget.style.background = 'transparent';
-                                            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
+                                            e.currentTarget.style.transform = 'translateY(0)';
+                                            e.currentTarget.style.boxShadow = '0 3px 10px rgba(239,68,68,0.3)';
                                         }}
                                         title="Tüm geçmişi temizle"
                                     >
-                                        <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>delete_sweep</span>
+                                        <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>delete_sweep</span>
                                         Geçmişi Temizle
                                     </button>
                                 )}
@@ -641,9 +642,10 @@ function RecentRow({ attempt, onDelete }: { attempt: RecentAttempt; onDelete: ()
             display: 'grid', gridTemplateColumns: 'auto 1fr auto auto auto', gap: 14, alignItems: 'center',
             padding: '10px 14px',
             background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
-            border: '1px solid var(--card-border)', borderRadius: 10,
-            transition: 'border-color 0.2s ease',
-            borderColor: hovered ? 'rgba(239,68,68,0.25)' : 'var(--card-border)',
+            borderRadius: 10,
+            transition: 'all 0.2s ease',
+            border: hovered ? '1px solid rgba(239,68,68,0.4)' : '1px solid var(--card-border)',
+            boxShadow: hovered ? '0 2px 8px rgba(239,68,68,0.08)' : 'none',
         }}>
             <div style={{
                 width: 36, height: 36, borderRadius: 10,
@@ -693,17 +695,17 @@ function RecentRow({ attempt, onDelete }: { attempt: RecentAttempt; onDelete: ()
                 }}
                 title="Bu kaydı sil"
                 style={{
-                    width: 28, height: 28, borderRadius: 6,
-                    background: hovered ? 'rgba(239,68,68,0.1)' : 'transparent',
-                    color: hovered ? '#ef4444' : 'var(--text-tertiary)',
-                    border: 'none',
+                    width: 32, height: 32, borderRadius: 8,
+                    background: hovered ? '#ef4444' : 'rgba(239,68,68,0.12)',
+                    color: hovered ? '#fff' : '#ef4444',
+                    border: hovered ? '1px solid #ef4444' : '1px solid rgba(239,68,68,0.3)',
                     cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all 0.2s ease',
-                    opacity: hovered ? 1 : 0.4,
+                    flexShrink: 0,
                 }}
             >
-                <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>close</span>
+                <span className="material-icons-outlined" style={{ fontSize: '1.15rem' }}>delete</span>
             </button>
         </div>
     );
