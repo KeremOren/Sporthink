@@ -79,6 +79,7 @@ export default function SimulationsPage() {
     const [activeCat, setActiveCat] = useState<string>(CATEGORIES[1].key); // Ürün Önerme default (like reference)
     const [confirmClear, setConfirmClear] = useState(false);
     const [clearing, setClearing] = useState(false);
+    const [viewAttempt, setViewAttempt] = useState<RecentAttempt | null>(null);
 
     useEffect(() => { document.title = 'Sporthink | Satış Simülasyonu'; }, []);
 
@@ -425,6 +426,7 @@ export default function SimulationsPage() {
                                             key={r.id}
                                             attempt={r}
                                             onDelete={() => handleDeleteOne(r.id)}
+                                            onView={() => setViewAttempt(r)}
                                         />
                                     ))}
                                 </div>
@@ -432,6 +434,11 @@ export default function SimulationsPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Geçmiş Detay Modal */}
+                {viewAttempt && (
+                    <AttemptDetailModal attempt={viewAttempt} onClose={() => setViewAttempt(null)} />
+                )}
 
                 {/* Geçmiş Temizle Onay Modal */}
                 {confirmClear && (
@@ -625,7 +632,7 @@ function ScenarioRow({ scenario, catMeta, onPlay, delay }: { scenario: Scenario;
     );
 }
 
-function RecentRow({ attempt, onDelete }: { attempt: RecentAttempt; onDelete: () => void }) {
+function RecentRow({ attempt, onDelete, onView }: { attempt: RecentAttempt; onDelete: () => void; onView: () => void }) {
     const cat = CATEGORIES.find(c => c.key === attempt.category);
     const diff = DIFFICULTY_META[attempt.difficulty] || DIFFICULTY_META.MEDIUM;
     const badge = attempt.badge ? BADGE_META[attempt.badge] : null;
@@ -636,16 +643,20 @@ function RecentRow({ attempt, onDelete }: { attempt: RecentAttempt; onDelete: ()
 
     return (
         <div
+            onClick={onView}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
+            title="Detayları görüntüle"
             style={{
             display: 'grid', gridTemplateColumns: 'auto 1fr auto auto auto', gap: 14, alignItems: 'center',
             padding: '10px 14px',
             background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
             borderRadius: 10,
+            cursor: 'pointer',
             transition: 'all 0.2s ease',
-            border: hovered ? '1px solid rgba(239,68,68,0.4)' : '1px solid var(--card-border)',
-            boxShadow: hovered ? '0 2px 8px rgba(239,68,68,0.08)' : 'none',
+            border: hovered ? '1px solid rgba(99,102,241,0.4)' : '1px solid var(--card-border)',
+            boxShadow: hovered ? '0 4px 14px rgba(99,102,241,0.12)' : 'none',
+            transform: hovered ? 'translateX(2px)' : 'translateX(0)',
         }}>
             <div style={{
                 width: 36, height: 36, borderRadius: 10,
@@ -696,17 +707,201 @@ function RecentRow({ attempt, onDelete }: { attempt: RecentAttempt; onDelete: ()
                 title="Bu kaydı sil"
                 style={{
                     width: 32, height: 32, borderRadius: 8,
-                    background: hovered ? '#ef4444' : 'rgba(239,68,68,0.12)',
-                    color: hovered ? '#fff' : '#ef4444',
-                    border: hovered ? '1px solid #ef4444' : '1px solid rgba(239,68,68,0.3)',
+                    background: 'rgba(239,68,68,0.12)',
+                    color: '#ef4444',
+                    border: '1px solid rgba(239,68,68,0.3)',
                     cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     transition: 'all 0.2s ease',
                     flexShrink: 0,
                 }}
+                onMouseEnter={e => {
+                    e.currentTarget.style.background = '#ef4444';
+                    e.currentTarget.style.color = '#fff';
+                }}
+                onMouseLeave={e => {
+                    e.currentTarget.style.background = 'rgba(239,68,68,0.12)';
+                    e.currentTarget.style.color = '#ef4444';
+                }}
             >
                 <span className="material-icons-outlined" style={{ fontSize: '1.15rem' }}>delete</span>
             </button>
+        </div>
+    );
+}
+
+// ==================== Attempt Detail Modal ====================
+function AttemptDetailModal({ attempt, onClose }: { attempt: RecentAttempt; onClose: () => void }) {
+    const cat = CATEGORIES.find(c => c.key === attempt.category);
+    const diff = DIFFICULTY_META[attempt.difficulty] || DIFFICULTY_META.MEDIUM;
+    const badge = attempt.badge ? BADGE_META[attempt.badge] : null;
+    const date = new Date(attempt.completedAt).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' });
+    const scoreColor = attempt.score >= 80 ? '#16a34a' : attempt.score >= 60 ? '#d97706' : '#dc2626';
+    const scoreLabel = attempt.score >= 90 ? 'Mükemmel!' : attempt.score >= 75 ? 'Çok İyi' : attempt.score >= 60 ? 'İyi' : attempt.score >= 40 ? 'Gelişebilir' : 'Tekrar Dene';
+
+    // ESC ile kapatma
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [onClose]);
+
+    return (
+        <div
+            onClick={onClose}
+            style={{
+                position: 'fixed', inset: 0, zIndex: 1000,
+                background: 'rgba(0,0,0,0.55)',
+                backdropFilter: 'blur(6px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: 20,
+                overflowY: 'auto',
+            }}
+        >
+            <div
+                onClick={e => e.stopPropagation()}
+                style={{
+                    background: 'var(--card-bg)',
+                    borderRadius: 20,
+                    maxWidth: 720,
+                    width: '100%',
+                    maxHeight: '90vh',
+                    overflowY: 'auto',
+                    boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
+                    border: '1px solid var(--card-border)',
+                }}
+            >
+                {/* Header — gradient skor */}
+                <div style={{
+                    padding: '28px 24px',
+                    background: `linear-gradient(135deg, ${scoreColor}, ${scoreColor}cc)`,
+                    color: '#fff', textAlign: 'center',
+                    position: 'relative',
+                    borderRadius: '20px 20px 0 0',
+                }}>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            position: 'absolute', top: 14, right: 14,
+                            width: 32, height: 32, borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.2)',
+                            color: '#fff', border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                        title="Kapat (ESC)"
+                    >
+                        <span className="material-icons-outlined" style={{ fontSize: '1.2rem' }}>close</span>
+                    </button>
+
+                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 2, opacity: 0.85, marginBottom: 8 }}>
+                        Simülasyon Sonucu
+                    </div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: 12, opacity: 0.95 }}>
+                        {attempt.scenarioTitle}
+                    </div>
+                    <div style={{ fontSize: '4rem', fontWeight: 900, lineHeight: 1, marginBottom: 6 }}>
+                        {attempt.score}
+                        <span style={{ fontSize: '1.2rem', fontWeight: 600, opacity: 0.8 }}> / 100</span>
+                    </div>
+                    <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 14 }}>{scoreLabel}</div>
+
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{
+                            padding: '4px 12px', borderRadius: 999,
+                            background: 'rgba(255,255,255,0.22)',
+                            fontSize: '0.78rem', fontWeight: 700,
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                        }}>
+                            <span className="material-icons-outlined" style={{ fontSize: '0.9rem' }}>{cat?.icon || 'theater_comedy'}</span>
+                            {cat?.label}
+                        </span>
+                        <span style={{
+                            padding: '4px 12px', borderRadius: 999,
+                            background: 'rgba(255,255,255,0.22)',
+                            fontSize: '0.78rem', fontWeight: 700,
+                        }}>
+                            {diff.label}
+                        </span>
+                        <span style={{
+                            padding: '4px 12px', borderRadius: 999,
+                            background: 'rgba(255,255,255,0.22)',
+                            fontSize: '0.78rem', fontWeight: 700,
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                        }}>
+                            <span className="material-icons-outlined" style={{ fontSize: '0.9rem' }}>stars</span>
+                            +{attempt.xpEarned} XP
+                        </span>
+                        {badge && (
+                            <span style={{
+                                padding: '4px 12px', borderRadius: 999,
+                                background: '#fff', color: badge.color,
+                                fontSize: '0.78rem', fontWeight: 700,
+                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                            }}>
+                                <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>{badge.icon}</span>
+                                {badge.label}
+                            </span>
+                        )}
+                    </div>
+                </div>
+
+                {/* Beceri analizi */}
+                <div style={{ padding: 24 }}>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14, fontWeight: 600 }}>
+                        Beceri Analizi
+                    </div>
+                    <div style={{ display: 'grid', gap: 12, marginBottom: 20 }}>
+                        <DetailSkillBar label="Empati" icon="favorite" value={attempt.empatiScore} color="#ec4899" />
+                        <DetailSkillBar label="Ürün Bilgisi" icon="school" value={attempt.bilgiScore} color="#3b82f6" />
+                        <DetailSkillBar label="Çapraz Satış" icon="sync_alt" value={attempt.caprazSatisScore} color="#8b5cf6" />
+                        <DetailSkillBar label="Kapanış" icon="flag" value={attempt.kapanisScore} color="#22c55e" />
+                    </div>
+
+                    {/* Footer info */}
+                    <div style={{
+                        padding: '12px 14px',
+                        background: 'var(--bg-secondary)',
+                        borderRadius: 10,
+                        fontSize: '0.8rem',
+                        color: 'var(--text-tertiary)',
+                        display: 'flex', alignItems: 'center', gap: 8,
+                    }}>
+                        <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>event</span>
+                        Tamamlanma: <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{date}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function DetailSkillBar({ label, icon, value, color }: { label: string; icon: string; value: number; color: string }) {
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    <span className="material-icons-outlined" style={{ fontSize: '1rem', color }}>{icon}</span>
+                    {label}
+                </div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 800, color }}>
+                    {value}<span style={{ fontSize: '0.7rem', opacity: 0.7 }}>/100</span>
+                </div>
+            </div>
+            <div style={{
+                height: 8, borderRadius: 4,
+                background: 'var(--bg-tertiary)',
+                overflow: 'hidden',
+            }}>
+                <div style={{
+                    height: '100%',
+                    width: `${Math.max(0, Math.min(100, value))}%`,
+                    background: `linear-gradient(90deg, ${color}, ${color}cc)`,
+                    boxShadow: `0 0 8px ${color}55`,
+                    borderRadius: 4,
+                    transition: 'width 0.8s cubic-bezier(0.22,1,0.36,1)',
+                }} />
+            </div>
         </div>
     );
 }
