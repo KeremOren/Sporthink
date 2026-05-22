@@ -737,7 +737,28 @@ function AttemptDetailModal({ attempt, onClose }: { attempt: RecentAttempt; onCl
     const badge = attempt.badge ? BADGE_META[attempt.badge] : null;
     const date = new Date(attempt.completedAt).toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' });
     const scoreColor = attempt.score >= 80 ? '#16a34a' : attempt.score >= 60 ? '#d97706' : '#dc2626';
+    const scoreGradient = attempt.score >= 80
+        ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+        : attempt.score >= 60
+            ? 'linear-gradient(135deg, #f59e0b, #d97706)'
+            : 'linear-gradient(135deg, #ef4444, #dc2626)';
     const scoreLabel = attempt.score >= 90 ? 'Mükemmel!' : attempt.score >= 75 ? 'Çok İyi' : attempt.score >= 60 ? 'İyi' : attempt.score >= 40 ? 'Gelişebilir' : 'Tekrar Dene';
+
+    // Circular progress için stroke-dashoffset hesabı
+    const radius = 70;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (Math.max(0, Math.min(100, attempt.score)) / 100) * circumference;
+
+    // En güçlü ve zayıf beceriyi bul
+    const skills = [
+        { label: 'Empati', icon: 'favorite', value: attempt.empatiScore, color: '#ec4899' },
+        { label: 'Ürün Bilgisi', icon: 'school', value: attempt.bilgiScore, color: '#3b82f6' },
+        { label: 'Çapraz Satış', icon: 'sync_alt', value: attempt.caprazSatisScore, color: '#8b5cf6' },
+        { label: 'Kapanış', icon: 'flag', value: attempt.kapanisScore, color: '#22c55e' },
+    ];
+    const sortedSkills = [...skills].sort((a, b) => b.value - a.value);
+    const bestSkill = sortedSkills[0];
+    const worstSkill = sortedSkills[sortedSkills.length - 1];
 
     // ESC ile kapatma
     useEffect(() => {
@@ -751,123 +772,252 @@ function AttemptDetailModal({ attempt, onClose }: { attempt: RecentAttempt; onCl
             onClick={onClose}
             style={{
                 position: 'fixed', inset: 0, zIndex: 1000,
-                background: 'rgba(0,0,0,0.55)',
-                backdropFilter: 'blur(6px)',
+                background: 'rgba(0,0,0,0.6)',
+                backdropFilter: 'blur(8px)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: 20,
                 overflowY: 'auto',
+                animation: 'cine-fadeInUp 0.3s cubic-bezier(0.22,1,0.36,1)',
             }}
         >
             <div
                 onClick={e => e.stopPropagation()}
                 style={{
                     background: 'var(--card-bg)',
-                    borderRadius: 20,
+                    borderRadius: 24,
                     maxWidth: 720,
                     width: '100%',
-                    maxHeight: '90vh',
+                    maxHeight: '92vh',
                     overflowY: 'auto',
-                    boxShadow: '0 30px 80px rgba(0,0,0,0.4)',
+                    boxShadow: '0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)',
                     border: '1px solid var(--card-border)',
+                    overflow: 'hidden',
                 }}
             >
-                {/* Header — gradient skor */}
+                {/* Hero header with circular score */}
                 <div style={{
-                    padding: '28px 24px',
-                    background: `linear-gradient(135deg, ${scoreColor}, ${scoreColor}cc)`,
-                    color: '#fff', textAlign: 'center',
+                    padding: '28px 24px 24px',
+                    background: scoreGradient,
+                    color: '#fff',
                     position: 'relative',
-                    borderRadius: '20px 20px 0 0',
+                    overflow: 'hidden',
                 }}>
+                    {/* Decorative dots/circles in bg */}
+                    <div style={{
+                        position: 'absolute',
+                        top: -40, right: -40,
+                        width: 160, height: 160,
+                        borderRadius: '50%',
+                        background: 'rgba(255,255,255,0.08)',
+                    }} />
+                    <div style={{
+                        position: 'absolute',
+                        bottom: -60, left: -30,
+                        width: 140, height: 140,
+                        borderRadius: '50%',
+                        background: 'rgba(255,255,255,0.05)',
+                    }} />
+
+                    {/* Close button */}
                     <button
                         onClick={onClose}
                         style={{
                             position: 'absolute', top: 14, right: 14,
-                            width: 32, height: 32, borderRadius: '50%',
-                            background: 'rgba(255,255,255,0.2)',
+                            width: 34, height: 34, borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.25)',
+                            backdropFilter: 'blur(8px)',
                             color: '#fff', border: 'none',
                             cursor: 'pointer',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'background 0.2s ease',
+                            zIndex: 2,
                         }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.4)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.25)'; }}
                         title="Kapat (ESC)"
                     >
                         <span className="material-icons-outlined" style={{ fontSize: '1.2rem' }}>close</span>
                     </button>
 
-                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 2, opacity: 0.85, marginBottom: 8 }}>
-                        Simülasyon Sonucu
-                    </div>
-                    <div style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: 12, opacity: 0.95 }}>
-                        {attempt.scenarioTitle}
-                    </div>
-                    <div style={{ fontSize: '4rem', fontWeight: 900, lineHeight: 1, marginBottom: 6 }}>
-                        {attempt.score}
-                        <span style={{ fontSize: '1.2rem', fontWeight: 600, opacity: 0.8 }}> / 100</span>
-                    </div>
-                    <div style={{ fontSize: '1rem', fontWeight: 600, marginBottom: 14 }}>{scoreLabel}</div>
-
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{
-                            padding: '4px 12px', borderRadius: 999,
-                            background: 'rgba(255,255,255,0.22)',
-                            fontSize: '0.78rem', fontWeight: 700,
-                            display: 'inline-flex', alignItems: 'center', gap: 4,
-                        }}>
-                            <span className="material-icons-outlined" style={{ fontSize: '0.9rem' }}>{cat?.icon || 'theater_comedy'}</span>
-                            {cat?.label}
-                        </span>
-                        <span style={{
-                            padding: '4px 12px', borderRadius: 999,
-                            background: 'rgba(255,255,255,0.22)',
-                            fontSize: '0.78rem', fontWeight: 700,
-                        }}>
-                            {diff.label}
-                        </span>
-                        <span style={{
-                            padding: '4px 12px', borderRadius: 999,
-                            background: 'rgba(255,255,255,0.22)',
-                            fontSize: '0.78rem', fontWeight: 700,
-                            display: 'inline-flex', alignItems: 'center', gap: 4,
-                        }}>
-                            <span className="material-icons-outlined" style={{ fontSize: '0.9rem' }}>stars</span>
-                            +{attempt.xpEarned} XP
-                        </span>
-                        {badge && (
-                            <span style={{
-                                padding: '4px 12px', borderRadius: 999,
-                                background: '#fff', color: badge.color,
-                                fontSize: '0.78rem', fontWeight: 700,
-                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 22 }}>
+                        {/* Circular score ring */}
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                            <svg width={170} height={170} style={{ transform: 'rotate(-90deg)' }}>
+                                <circle
+                                    cx={85} cy={85} r={radius}
+                                    fill="none"
+                                    stroke="rgba(255,255,255,0.2)"
+                                    strokeWidth={10}
+                                />
+                                <circle
+                                    cx={85} cy={85} r={radius}
+                                    fill="none"
+                                    stroke="#fff"
+                                    strokeWidth={10}
+                                    strokeLinecap="round"
+                                    strokeDasharray={circumference}
+                                    strokeDashoffset={offset}
+                                    style={{ transition: 'stroke-dashoffset 1s cubic-bezier(0.22,1,0.36,1)' }}
+                                />
+                            </svg>
+                            <div style={{
+                                position: 'absolute', inset: 0,
+                                display: 'flex', flexDirection: 'column',
+                                alignItems: 'center', justifyContent: 'center',
                             }}>
-                                <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>{badge.icon}</span>
-                                {badge.label}
-                            </span>
-                        )}
+                                <div style={{ fontSize: '3rem', fontWeight: 900, lineHeight: 1 }}>{attempt.score}</div>
+                                <div style={{ fontSize: '0.7rem', opacity: 0.85, marginTop: 2, textTransform: 'uppercase', letterSpacing: 1 }}>/ 100</div>
+                            </div>
+                        </div>
+
+                        {/* Info side */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 2, opacity: 0.85, marginBottom: 6 }}>
+                                Simülasyon Sonucu
+                            </div>
+                            <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, lineHeight: 1.25 }}>
+                                {attempt.scenarioTitle}
+                            </div>
+                            <div style={{
+                                fontSize: '0.95rem', fontWeight: 700,
+                                display: 'inline-block',
+                                padding: '4px 12px', borderRadius: 999,
+                                background: 'rgba(255,255,255,0.2)',
+                                marginBottom: 10,
+                            }}>{scoreLabel}</div>
+
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                <span style={{
+                                    padding: '3px 10px', borderRadius: 999,
+                                    background: 'rgba(255,255,255,0.18)',
+                                    fontSize: '0.72rem', fontWeight: 700,
+                                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                                }}>
+                                    <span className="material-icons-outlined" style={{ fontSize: '0.85rem' }}>{cat?.icon || 'theater_comedy'}</span>
+                                    {cat?.label}
+                                </span>
+                                <span style={{
+                                    padding: '3px 10px', borderRadius: 999,
+                                    background: 'rgba(255,255,255,0.18)',
+                                    fontSize: '0.72rem', fontWeight: 700,
+                                }}>
+                                    {diff.label}
+                                </span>
+                                <span style={{
+                                    padding: '3px 10px', borderRadius: 999,
+                                    background: 'rgba(255,255,255,0.18)',
+                                    fontSize: '0.72rem', fontWeight: 700,
+                                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                                }}>
+                                    <span className="material-icons-outlined" style={{ fontSize: '0.85rem' }}>stars</span>
+                                    +{attempt.xpEarned} XP
+                                </span>
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Badge banner (full width if exists) */}
+                    {badge && (
+                        <div style={{
+                            marginTop: 18, position: 'relative', zIndex: 1,
+                            padding: '10px 14px',
+                            background: 'rgba(255,255,255,0.95)',
+                            color: badge.color,
+                            borderRadius: 12,
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            boxShadow: '0 6px 16px rgba(0,0,0,0.15)',
+                        }}>
+                            <div style={{
+                                width: 38, height: 38, borderRadius: 10,
+                                background: badge.color, color: '#fff',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                flexShrink: 0,
+                            }}>
+                                <span className="material-icons-outlined" style={{ fontSize: '1.3rem' }}>{badge.icon}</span>
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 1, opacity: 0.7, fontWeight: 700 }}>Rozet Kazandın</div>
+                                <div style={{ fontSize: '1rem', fontWeight: 800 }}>{badge.label}</div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* Beceri analizi */}
+                {/* Body */}
                 <div style={{ padding: 24 }}>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 14, fontWeight: 600 }}>
+                    {/* Section title */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)',
+                        marginBottom: 14,
+                    }}>
+                        <span className="material-icons-outlined" style={{ fontSize: '1.1rem', color: 'var(--text-tertiary)' }}>analytics</span>
                         Beceri Analizi
                     </div>
-                    <div style={{ display: 'grid', gap: 12, marginBottom: 20 }}>
-                        <DetailSkillBar label="Empati" icon="favorite" value={attempt.empatiScore} color="#ec4899" />
-                        <DetailSkillBar label="Ürün Bilgisi" icon="school" value={attempt.bilgiScore} color="#3b82f6" />
-                        <DetailSkillBar label="Çapraz Satış" icon="sync_alt" value={attempt.caprazSatisScore} color="#8b5cf6" />
-                        <DetailSkillBar label="Kapanış" icon="flag" value={attempt.kapanisScore} color="#22c55e" />
+
+                    {/* 2x2 grid of skill cards */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                        gap: 10,
+                        marginBottom: 18,
+                    }}>
+                        {skills.map(s => (
+                            <SkillCard key={s.label} {...s} />
+                        ))}
                     </div>
 
-                    {/* Footer info */}
+                    {/* Best / Worst Insight */}
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 10,
+                        marginBottom: 18,
+                    }}>
+                        <div style={{
+                            padding: '12px 14px',
+                            background: `${bestSkill.color}10`,
+                            border: `1px solid ${bestSkill.color}30`,
+                            borderRadius: 12,
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                                <span className="material-icons-outlined" style={{ fontSize: '1rem', color: bestSkill.color }}>trending_up</span>
+                                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700, color: bestSkill.color }}>
+                                    En Güçlü
+                                </span>
+                            </div>
+                            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                {bestSkill.label} <span style={{ color: bestSkill.color }}>· {bestSkill.value}</span>
+                            </div>
+                        </div>
+                        <div style={{
+                            padding: '12px 14px',
+                            background: `${worstSkill.color}10`,
+                            border: `1px solid ${worstSkill.color}30`,
+                            borderRadius: 12,
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                                <span className="material-icons-outlined" style={{ fontSize: '1rem', color: worstSkill.color }}>trending_down</span>
+                                <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700, color: worstSkill.color }}>
+                                    Gelişim Alanı
+                                </span>
+                            </div>
+                            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                {worstSkill.label} <span style={{ color: worstSkill.color }}>· {worstSkill.value}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Date footer */}
                     <div style={{
                         padding: '12px 14px',
                         background: 'var(--bg-secondary)',
-                        borderRadius: 10,
-                        fontSize: '0.8rem',
+                        borderRadius: 12,
+                        fontSize: '0.82rem',
                         color: 'var(--text-tertiary)',
                         display: 'flex', alignItems: 'center', gap: 8,
                     }}>
-                        <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>event</span>
+                        <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>event</span>
                         Tamamlanma: <strong style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{date}</strong>
                     </div>
                 </div>
@@ -876,30 +1026,45 @@ function AttemptDetailModal({ attempt, onClose }: { attempt: RecentAttempt; onCl
     );
 }
 
-function DetailSkillBar({ label, icon, value, color }: { label: string; icon: string; value: number; color: string }) {
+function SkillCard({ label, icon, value, color }: { label: string; icon: string; value: number; color: string }) {
+    const safeValue = Math.max(0, Math.min(100, value));
     return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                    <span className="material-icons-outlined" style={{ fontSize: '1rem', color }}>{icon}</span>
-                    {label}
+        <div style={{
+            padding: 14,
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--card-border)',
+            borderRadius: 12,
+            borderLeft: `4px solid ${color}`,
+            transition: 'all 0.2s ease',
+        }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{
+                        width: 26, height: 26, borderRadius: 7,
+                        background: `${color}18`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                        <span className="material-icons-outlined" style={{ fontSize: '0.95rem', color }}>{icon}</span>
+                    </div>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-primary)' }}>{label}</span>
                 </div>
-                <div style={{ fontSize: '0.95rem', fontWeight: 800, color }}>
-                    {value}<span style={{ fontSize: '0.7rem', opacity: 0.7 }}>/100</span>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, color }}>
+                    {value}
+                    <span style={{ fontSize: '0.65rem', opacity: 0.65, marginLeft: 1 }}>/100</span>
                 </div>
             </div>
             <div style={{
-                height: 8, borderRadius: 4,
+                height: 7, borderRadius: 4,
                 background: 'var(--bg-tertiary)',
                 overflow: 'hidden',
             }}>
                 <div style={{
                     height: '100%',
-                    width: `${Math.max(0, Math.min(100, value))}%`,
+                    width: `${safeValue}%`,
                     background: `linear-gradient(90deg, ${color}, ${color}cc)`,
                     boxShadow: `0 0 8px ${color}55`,
                     borderRadius: 4,
-                    transition: 'width 0.8s cubic-bezier(0.22,1,0.36,1)',
+                    transition: 'width 0.9s cubic-bezier(0.22,1,0.36,1)',
                 }} />
             </div>
         </div>
