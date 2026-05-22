@@ -77,6 +77,8 @@ export default function SimulationsPage() {
     const [data, setData] = useState<SimData | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeCat, setActiveCat] = useState<string>(CATEGORIES[1].key); // Ürün Önerme default (like reference)
+    const [confirmClear, setConfirmClear] = useState(false);
+    const [clearing, setClearing] = useState(false);
 
     useEffect(() => { document.title = 'Sporthink | Satış Simülasyonu'; }, []);
 
@@ -104,6 +106,39 @@ export default function SimulationsPage() {
         data?.scenarios.filter(s => s.category === activeCat) || [],
         [data, activeCat]
     );
+
+    const refresh = () => {
+        fetch('/api/simulations')
+            .then(r => r.json())
+            .then(setData)
+            .catch(() => {});
+    };
+
+    const handleClearAll = async () => {
+        setClearing(true);
+        try {
+            const res = await fetch('/api/simulations', { method: 'DELETE' });
+            if (!res.ok) throw new Error();
+            const result = await res.json();
+            showToast(`${result.deleted} kayıt silindi`, 'success');
+            setConfirmClear(false);
+            refresh();
+        } catch {
+            showToast('Silme işlemi başarısız oldu', 'error');
+        }
+        setClearing(false);
+    };
+
+    const handleDeleteOne = async (attemptId: string) => {
+        try {
+            const res = await fetch(`/api/simulations?attemptId=${attemptId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error();
+            showToast('Kayıt silindi', 'success');
+            refresh();
+        } catch {
+            showToast('Silinemedi', 'error');
+        }
+    };
 
     const activeCatMeta = CATEGORIES.find(c => c.key === activeCat)!;
     const stats = data?.stats;
@@ -298,13 +333,48 @@ export default function SimulationsPage() {
 
                         {/* Recent Results */}
                         <div className="cine-fadeInUp" style={{ marginTop: 28 }}>
-                            <h2 style={{
-                                fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)',
-                                margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 8,
-                            }}>
-                                <span className="material-icons-outlined" style={{ color: '#E53935' }}>history</span>
-                                Son Sonuçlarım
-                            </h2>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, gap: 12, flexWrap: 'wrap' }}>
+                                <h2 style={{
+                                    fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)',
+                                    margin: 0, display: 'flex', alignItems: 'center', gap: 8,
+                                }}>
+                                    <span className="material-icons-outlined" style={{ color: '#E53935' }}>history</span>
+                                    Son Sonuçlarım
+                                    {data?.recent && data.recent.length > 0 && (
+                                        <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', fontWeight: 500 }}>
+                                            ({data.recent.length})
+                                        </span>
+                                    )}
+                                </h2>
+                                {data?.recent && data.recent.length > 0 && (
+                                    <button
+                                        onClick={() => setConfirmClear(true)}
+                                        style={{
+                                            padding: '6px 12px',
+                                            background: 'transparent',
+                                            color: '#ef4444',
+                                            border: '1px solid rgba(239,68,68,0.3)',
+                                            borderRadius: 8,
+                                            fontSize: '0.78rem', fontWeight: 600,
+                                            cursor: 'pointer',
+                                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                                            transition: 'all 0.2s ease',
+                                        }}
+                                        onMouseEnter={e => {
+                                            e.currentTarget.style.background = 'rgba(239,68,68,0.08)';
+                                            e.currentTarget.style.borderColor = '#ef4444';
+                                        }}
+                                        onMouseLeave={e => {
+                                            e.currentTarget.style.background = 'transparent';
+                                            e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
+                                        }}
+                                        title="Tüm geçmişi temizle"
+                                    >
+                                        <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>delete_sweep</span>
+                                        Geçmişi Temizle
+                                    </button>
+                                )}
+                            </div>
                             {(!data?.recent || data.recent.length === 0) ? (
                                 <div style={{
                                     padding: '32px 22px', textAlign: 'center',
@@ -350,13 +420,99 @@ export default function SimulationsPage() {
                             ) : (
                                 <div style={{ display: 'grid', gap: 8 }}>
                                     {data.recent.slice(0, 5).map(r => (
-                                        <RecentRow key={r.id} attempt={r} />
+                                        <RecentRow
+                                            key={r.id}
+                                            attempt={r}
+                                            onDelete={() => handleDeleteOne(r.id)}
+                                        />
                                     ))}
                                 </div>
                             )}
                         </div>
                     </div>
                 </div>
+
+                {/* Geçmiş Temizle Onay Modal */}
+                {confirmClear && (
+                    <div
+                        onClick={() => !clearing && setConfirmClear(false)}
+                        style={{
+                            position: 'fixed', inset: 0, zIndex: 1000,
+                            background: 'rgba(0,0,0,0.5)',
+                            backdropFilter: 'blur(4px)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            padding: 20,
+                        }}
+                    >
+                        <div
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                background: 'var(--card-bg)',
+                                borderRadius: 16,
+                                padding: 24,
+                                maxWidth: 420,
+                                width: '100%',
+                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                                border: '1px solid var(--card-border)',
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                                <div style={{
+                                    width: 44, height: 44, borderRadius: 12,
+                                    background: 'rgba(239,68,68,0.12)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    color: '#ef4444',
+                                }}>
+                                    <span className="material-icons-outlined" style={{ fontSize: '1.4rem' }}>warning</span>
+                                </div>
+                                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                    Geçmişi temizlemek istediğine emin misin?
+                                </h3>
+                            </div>
+                            <p style={{ margin: '0 0 18px', fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                                Tüm simülasyon denemen <strong>({data?.recent.length || 0} kayıt)</strong> kalıcı olarak silinecek.
+                                Kazandığın <strong style={{ color: '#f59e0b' }}>{data?.stats.totalXP || 0} XP</strong> ve rozetler de geri alınacak.
+                                Bu işlem <strong>geri alınamaz</strong>.
+                            </p>
+                            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                <button
+                                    onClick={() => setConfirmClear(false)}
+                                    disabled={clearing}
+                                    style={{
+                                        padding: '9px 16px',
+                                        background: 'transparent',
+                                        color: 'var(--text-secondary)',
+                                        border: '1px solid var(--card-border)',
+                                        borderRadius: 8,
+                                        fontSize: '0.85rem', fontWeight: 600,
+                                        cursor: clearing ? 'not-allowed' : 'pointer',
+                                    }}
+                                >
+                                    İptal
+                                </button>
+                                <button
+                                    onClick={handleClearAll}
+                                    disabled={clearing}
+                                    style={{
+                                        padding: '9px 16px',
+                                        background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: 8,
+                                        fontSize: '0.85rem', fontWeight: 700,
+                                        cursor: clearing ? 'not-allowed' : 'pointer',
+                                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                                        boxShadow: '0 4px 12px rgba(239,68,68,0.35)',
+                                        opacity: clearing ? 0.7 : 1,
+                                    }}
+                                >
+                                    <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>delete_sweep</span>
+                                    {clearing ? 'Siliniyor...' : 'Evet, Hepsini Sil'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
@@ -468,20 +624,26 @@ function ScenarioRow({ scenario, catMeta, onPlay, delay }: { scenario: Scenario;
     );
 }
 
-function RecentRow({ attempt }: { attempt: RecentAttempt }) {
+function RecentRow({ attempt, onDelete }: { attempt: RecentAttempt; onDelete: () => void }) {
     const cat = CATEGORIES.find(c => c.key === attempt.category);
     const diff = DIFFICULTY_META[attempt.difficulty] || DIFFICULTY_META.MEDIUM;
     const badge = attempt.badge ? BADGE_META[attempt.badge] : null;
     const date = new Date(attempt.completedAt).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' });
+    const [hovered, setHovered] = useState(false);
 
     const scoreColor = attempt.score >= 80 ? '#16a34a' : attempt.score >= 60 ? '#d97706' : '#dc2626';
 
     return (
-        <div style={{
-            display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', gap: 14, alignItems: 'center',
+        <div
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            style={{
+            display: 'grid', gridTemplateColumns: 'auto 1fr auto auto auto', gap: 14, alignItems: 'center',
             padding: '10px 14px',
             background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
             border: '1px solid var(--card-border)', borderRadius: 10,
+            transition: 'border-color 0.2s ease',
+            borderColor: hovered ? 'rgba(239,68,68,0.25)' : 'var(--card-border)',
         }}>
             <div style={{
                 width: 36, height: 36, borderRadius: 10,
@@ -522,6 +684,27 @@ function RecentRow({ attempt }: { attempt: RecentAttempt }) {
                     +{attempt.xpEarned}
                 </div>
             </div>
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm('Bu kaydı silmek istediğine emin misin? Kazandığın XP geri alınacak.')) {
+                        onDelete();
+                    }
+                }}
+                title="Bu kaydı sil"
+                style={{
+                    width: 28, height: 28, borderRadius: 6,
+                    background: hovered ? 'rgba(239,68,68,0.1)' : 'transparent',
+                    color: hovered ? '#ef4444' : 'var(--text-tertiary)',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.2s ease',
+                    opacity: hovered ? 1 : 0.4,
+                }}
+            >
+                <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>close</span>
+            </button>
         </div>
     );
 }

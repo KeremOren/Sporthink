@@ -86,3 +86,31 @@ export async function GET() {
         },
     });
 }
+
+/**
+ * DELETE /api/simulations
+ * Kullanıcının tüm simülasyon geçmişini sil (kendi kayıtları).
+ * Query: ?attemptId=xxx → sadece o tek denemeyi sil
+ */
+export async function DELETE(req: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const user = session.user as any;
+    const { searchParams } = new URL(req.url);
+    const attemptId = searchParams.get('attemptId');
+
+    if (attemptId) {
+        // Tekli silme — ownership kontrolü
+        const attempt = await prisma.simAttempt.findUnique({ where: { id: attemptId } });
+        if (!attempt || attempt.userId !== user.id) {
+            return NextResponse.json({ error: 'Kayıt bulunamadı' }, { status: 404 });
+        }
+        await prisma.simAttempt.delete({ where: { id: attemptId } });
+        return NextResponse.json({ deleted: 1 });
+    }
+
+    // Toplu silme — kullanıcının tüm attempt'leri
+    const result = await prisma.simAttempt.deleteMany({ where: { userId: user.id } });
+    return NextResponse.json({ deleted: result.count });
+}
