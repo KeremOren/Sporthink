@@ -24,6 +24,7 @@ export default function PerformancePage() {
     const [loading, setLoading] = useState(true);
     const [selectedStore, setSelectedStore] = useState('');
     const [selectedPeriod, setSelectedPeriod] = useState('');
+    const [tableSearch, setTableSearch] = useState('');
     const trendChartRef = useRef<HTMLCanvasElement>(null);
     const compareChartRef = useRef<HTMLCanvasElement>(null);
     const chartInstances = useRef<Chart[]>([]);
@@ -355,15 +356,58 @@ export default function PerformancePage() {
                             </div>
 
                             {/* ══════ SECTION 3: Detaylı Tablo ══════ */}
+                            {(() => {
+                                const q = tableSearch.trim().toLowerCase();
+                                const filteredStores = q
+                                    ? data.stores.filter((s: any) =>
+                                        (s.storeName || '').toLowerCase().includes(q) ||
+                                        s.kpis.some((k: any) => (k.name || '').toLowerCase().includes(q))
+                                    )
+                                    : data.stores;
+                                return (
                             <div className="card" style={{ marginBottom: 28 }}>
-                                <div className="card-header">
-                                    <h4 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div className="card-header" style={{ flexWrap: 'wrap', gap: 12 }}>
+                                    <h4 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6, margin: 0 }}>
                                         <span className="material-icons-outlined" style={{ fontSize: '1.1rem', color: '#0ea5e9' }}>table_chart</span>
                                         Detaylı Performans — Hedef Fark Analizi
                                     </h4>
-                                    {data.stores.length > 1 && (
-                                        <span className="badge" style={{ background: 'var(--bg-tertiary)' }}>{data.stores.length} mağaza</span>
-                                    )}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '1 1 auto', justifyContent: 'flex-end', minWidth: 240 }}>
+                                        {data.stores.length > 1 && (
+                                            <div style={{ position: 'relative', flex: '0 1 280px', minWidth: 200 }}>
+                                                <span className="material-icons-outlined" style={{
+                                                    position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+                                                    color: 'var(--text-tertiary)', fontSize: '1.05rem', pointerEvents: 'none',
+                                                }}>search</span>
+                                                <input
+                                                    className="form-input"
+                                                    style={{ paddingLeft: 36, paddingRight: tableSearch ? 36 : 12, fontSize: '0.85rem', height: 36 }}
+                                                    placeholder="Mağaza veya KPI ara..."
+                                                    value={tableSearch}
+                                                    onChange={e => setTableSearch(e.target.value)}
+                                                />
+                                                {tableSearch && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setTableSearch('')}
+                                                        style={{
+                                                            position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+                                                            background: 'transparent', border: 'none', cursor: 'pointer',
+                                                            color: 'var(--text-tertiary)', padding: 4,
+                                                            display: 'flex', alignItems: 'center',
+                                                        }}
+                                                        title="Aramayı temizle"
+                                                    >
+                                                        <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>close</span>
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                        {data.stores.length > 1 && (
+                                            <span className="badge" style={{ background: 'var(--bg-tertiary)' }}>
+                                                {q ? `${filteredStores.length} / ${data.stores.length}` : `${data.stores.length}`} mağaza
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="table-container" style={{ border: 'none' }}>
                                     <table>
@@ -379,8 +423,24 @@ export default function PerformancePage() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {data.stores.map((s: any) =>
-                                                s.kpis.map((kpi: any) => {
+                                            {filteredStores.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={data.stores.length > 1 ? 7 : 6} style={{ textAlign: 'center', padding: '32px 12px', color: 'var(--text-tertiary)' }}>
+                                                        <span className="material-icons-outlined" style={{ fontSize: '1.6rem', display: 'block', marginBottom: 4, opacity: 0.5 }}>search_off</span>
+                                                        &quot;{tableSearch}&quot; için sonuç yok
+                                                    </td>
+                                                </tr>
+                                            ) : filteredStores.flatMap((s: any) =>
+                                                // KPI bazında da filtrele — eğer arama KPI'da eşleşirse sadece o satır gelsin
+                                                s.kpis
+                                                    .filter((kpi: any) => {
+                                                        if (!q) return true;
+                                                        // Mağaza adı eşleşiyorsa tüm KPI'lar
+                                                        if ((s.storeName || '').toLowerCase().includes(q)) return true;
+                                                        // Aksi halde sadece eşleşen KPI'lar
+                                                        return (kpi.name || '').toLowerCase().includes(q);
+                                                    })
+                                                    .map((kpi: any) => {
                                                     const diff = kpi.targetValue ? kpi.currentValue - kpi.targetValue : null;
                                                     const isInverse = kpi.name.includes('İade') || kpi.name.includes('Devamsızlık');
                                                     const diffPositive = isInverse ? (diff !== null && diff <= 0) : (diff !== null && diff >= 0);
@@ -428,6 +488,8 @@ export default function PerformancePage() {
                                     </table>
                                 </div>
                             </div>
+                                );
+                            })()}
 
                             {/* ══════ SECTION 4: Düşük Performans Uyarısı ══════ */}
                             {lowPerformers.length > 0 && (
