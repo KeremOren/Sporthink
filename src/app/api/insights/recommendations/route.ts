@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
 import webpush from 'web-push';
+import { notifyUsers } from '@/lib/notify';
 
 const VAPID_PUBLIC = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE = process.env.VAPID_PRIVATE_KEY || '';
@@ -350,15 +351,15 @@ export async function POST(req: Request) {
         },
     });
 
-    // Atanan personele push bildirim gönder (arka planda, hata durumunda da response döner)
+    // Atanan personele bildirim gönder (DB + push, fire-and-forget)
     if (created > 0) {
         const training = await prisma.training.findUnique({ where: { id: trainingId }, select: { title: true } });
         const newlyAssigned = employees.slice(0, created).map(e => e.id);
-        // Fire-and-forget
-        sendPushToUsers(newlyAssigned, {
-            title: '🎯 AI Yeni Eğitim Atadı',
-            body: `${training?.title || 'Yeni eğitim'} — KPI gelişiminiz için önerildi`,
-            url: '/trainings',
+        notifyUsers(newlyAssigned, {
+            type: 'AI_RECOMMENDATION',
+            title: 'AI yeni eğitim atadı',
+            message: `"${training?.title || 'Yeni eğitim'}" — ${kpiName || 'KPI'} gelişiminiz için önerildi.`,
+            link: '/trainings',
         }).catch(() => {});
     }
 

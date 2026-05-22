@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { notifyUser } from '@/lib/notify';
 
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
@@ -45,9 +46,19 @@ export async function POST(req: Request) {
 
     const { trainingId, userIds, dueDate } = await req.json();
 
+    const training = await prisma.training.findUnique({
+        where: { id: trainingId },
+        select: { id: true, title: true },
+    });
+
     const assignments = await Promise.all(
-        userIds.map((userId: string) =>
-            prisma.trainingAssignment.upsert({
+        userIds.map(async (userId: string) => {
+            // Mevcut atama var mı kontrol et (yeni atama mı yoksa güncelleme mi?)
+            const existing = await prisma.trainingAssignment.findUnique({
+                where: { trainingId_userId: { trainingId, userId } },
+            });
+
+            const assignment = await prisma.trainingAssignment.upsert({
                 where: { trainingId_userId: { trainingId, userId } },
                 update: { dueDate: dueDate ? new Date(dueDate) : null },
                 create: {
@@ -56,8 +67,24 @@ export async function POST(req: Request) {
                     assignedById: user.id,
                     dueDate: dueDate ? new Date(dueDate) : null,
                 },
-            })
-        )
+            });
+
+            // Yeni atama ise bildirim gönder
+            if (!existing && training) {
+                const dueText = dueDate
+                    ? ` Son tarih: ${new Date(dueDate).toLocaleDateString('tr-TR')}.`
+                    : '';
+                notifyUser({
+                    userId,
+                    type: 'TRAINING_ASSIGNED',
+                    title: 'Yeni eğitim atandı',
+                    message: `"${training.title}" eğitimi size atandı.${dueText}`,
+                    link: `/trainings/${trainingId}`,
+                }).catch(() => {});
+            }
+
+            return assignment;
+        })
     );
 
     return NextResponse.json({ count: assignments.length });

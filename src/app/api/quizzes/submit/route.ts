@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { notifyUser } from '@/lib/notify';
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
@@ -102,6 +103,16 @@ export async function POST(req: Request) {
                     details: `"${quiz.training?.title}" eğitiminde %${score} alındı (min: %${minPass}). Otomatik tekrar atandı.`,
                 },
             });
+
+            // Bildirim: quiz başarısız + otomatik tekrar
+            notifyUser({
+                userId: user.id,
+                type: 'QUIZ_FAILED_RETRY',
+                title: 'Quiz başarısız — tekrar atandı',
+                message: `"${quiz.training?.title}" eğitiminde %${score} aldınız (min: %${minPass}). Eğitim 1 hafta süreyle tekrar atandı.`,
+                link: `/trainings/${quiz.training?.id}`,
+                urgent: true,
+            }).catch(() => {});
 
             autoRetry = true;
         }

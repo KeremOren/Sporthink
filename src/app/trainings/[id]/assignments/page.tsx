@@ -30,6 +30,7 @@ export default function AssignmentStatusPage() {
     const [showAssign, setShowAssign] = useState(false);
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
     const [dueDate, setDueDate] = useState('');
+    const [modalSearch, setModalSearch] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -82,6 +83,7 @@ export default function AssignmentStatusPage() {
             setShowAssign(false);
             setSelectedUserIds([]);
             setDueDate('');
+            setModalSearch('');
             fetchData();
         } catch {
             showToast('Atama yapılırken hata oluştu', 'error');
@@ -462,11 +464,11 @@ export default function AssignmentStatusPage() {
 
                 {/* Assign Modal */}
                 {showAssign && (
-                    <div className="modal-overlay" onClick={() => setShowAssign(false)}>
+                    <div className="modal-overlay" onClick={() => { setShowAssign(false); setModalSearch(''); }}>
                         <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 640 }}>
                             <div className="modal-header">
                                 <h3>Personel Ata</h3>
-                                <button className="btn btn-ghost btn-sm" onClick={() => setShowAssign(false)}>
+                                <button className="btn btn-ghost btn-sm" onClick={() => { setShowAssign(false); setModalSearch(''); }}>
                                     <span className="material-icons-outlined">close</span>
                                 </button>
                             </div>
@@ -487,14 +489,74 @@ export default function AssignmentStatusPage() {
                                         }}>
                                             Atanabilecek personel yok (hepsi zaten atanmış)
                                         </div>
-                                    ) : (
+                                    ) : (() => {
+                                        const q = modalSearch.trim().toLowerCase();
+                                        const filteredModalUsers = q
+                                            ? availableUsers.filter(u => {
+                                                const fullName = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
+                                                const store = (u.store?.name || '').toLowerCase();
+                                                const email = (u.email || '').toLowerCase();
+                                                return fullName.includes(q) || store.includes(q) || email.includes(q);
+                                            })
+                                            : availableUsers;
+                                        return (
+                                        <>
+                                        {/* Search input */}
+                                        <div style={{ position: 'relative', marginBottom: 10 }}>
+                                            <span className="material-icons-outlined" style={{
+                                                position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+                                                color: 'var(--text-tertiary)', fontSize: '1.05rem', pointerEvents: 'none',
+                                            }}>search</span>
+                                            <input
+                                                className="form-input"
+                                                style={{ paddingLeft: 36, paddingRight: modalSearch ? 36 : 12 }}
+                                                placeholder="İsim, soyisim veya mağaza ara..."
+                                                value={modalSearch}
+                                                onChange={e => setModalSearch(e.target.value)}
+                                                autoFocus
+                                            />
+                                            {modalSearch && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setModalSearch('')}
+                                                    style={{
+                                                        position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+                                                        background: 'transparent', border: 'none', cursor: 'pointer',
+                                                        color: 'var(--text-tertiary)', padding: 4,
+                                                        display: 'flex', alignItems: 'center',
+                                                    }}
+                                                    title="Aramayı temizle"
+                                                >
+                                                    <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>close</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div style={{
+                                            fontSize: '0.72rem',
+                                            color: 'var(--text-tertiary)',
+                                            marginBottom: 6,
+                                        }}>
+                                            {q
+                                                ? `${filteredModalUsers.length} sonuç bulundu`
+                                                : `${availableUsers.length} personel listeleniyor`}
+                                        </div>
                                         <div style={{
                                             maxHeight: 300, overflowY: 'auto',
                                             border: '1px solid var(--border)',
                                             borderRadius: 8,
                                             background: 'var(--bg-secondary)',
                                         }}>
-                                            {availableUsers.map(u => {
+                                            {filteredModalUsers.length === 0 ? (
+                                                <div style={{
+                                                    padding: 24, textAlign: 'center',
+                                                    color: 'var(--text-tertiary)', fontSize: '0.82rem',
+                                                }}>
+                                                    <span className="material-icons-outlined" style={{ fontSize: '1.6rem', display: 'block', marginBottom: 4, opacity: 0.5 }}>
+                                                        search_off
+                                                    </span>
+                                                    "{modalSearch}" için sonuç yok
+                                                </div>
+                                            ) : filteredModalUsers.map(u => {
                                                 const selected = selectedUserIds.includes(u.id);
                                                 return (
                                                     <label key={u.id} style={{
@@ -527,12 +589,26 @@ export default function AssignmentStatusPage() {
                                                 );
                                             })}
                                         </div>
-                                    )}
+                                        </>
+                                        );
+                                    })()}
                                     {availableUsers.length > 0 && (
                                         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                                             <button
                                                 type="button"
-                                                onClick={() => setSelectedUserIds(availableUsers.map(u => u.id))}
+                                                onClick={() => {
+                                                    // Filtrelenmiş sonuçların hepsini seç (arama varsa)
+                                                    const q = modalSearch.trim().toLowerCase();
+                                                    const target = q
+                                                        ? availableUsers.filter(u => {
+                                                            const fullName = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
+                                                            const store = (u.store?.name || '').toLowerCase();
+                                                            const email = (u.email || '').toLowerCase();
+                                                            return fullName.includes(q) || store.includes(q) || email.includes(q);
+                                                        })
+                                                        : availableUsers;
+                                                    setSelectedUserIds(Array.from(new Set([...selectedUserIds, ...target.map(u => u.id)])));
+                                                }}
                                                 style={{
                                                     fontSize: '0.75rem', padding: '4px 10px',
                                                     border: '1px solid var(--border)', borderRadius: 6,
@@ -540,7 +616,7 @@ export default function AssignmentStatusPage() {
                                                     cursor: 'pointer',
                                                 }}
                                             >
-                                                Tümünü Seç
+                                                {modalSearch.trim() ? 'Sonuçların Tümünü Seç' : 'Tümünü Seç'}
                                             </button>
                                             <button
                                                 type="button"
@@ -559,7 +635,7 @@ export default function AssignmentStatusPage() {
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button className="btn btn-ghost" onClick={() => setShowAssign(false)}>İptal</button>
+                                <button className="btn btn-ghost" onClick={() => { setShowAssign(false); setModalSearch(''); }}>İptal</button>
                                 <button
                                     className="btn btn-primary"
                                     onClick={handleAssign}

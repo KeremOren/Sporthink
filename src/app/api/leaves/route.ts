@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
+import { notifyUsers } from '@/lib/notify';
 
 /**
  * GET /api/leaves
@@ -113,9 +114,41 @@ export async function POST(req: Request) {
             status: 'PENDING',
         },
         include: {
-            user: { select: { id: true, firstName: true, lastName: true } },
+            user: { select: { id: true, firstName: true, lastName: true, storeId: true, regionId: true } },
         },
     });
+
+    // Yöneticilere bildirim gönder: store manager + bölge müdürü + super admin
+    try {
+        const orConditions: any[] = [{ role: 'SUPER_ADMIN' }];
+        if (request.user.storeId) {
+            orConditions.push({ role: 'STORE_MANAGER', storeId: request.user.storeId });
+        }
+        if (request.user.regionId) {
+            orConditions.push({ role: 'REGIONAL_MANAGER', regionId: request.user.regionId });
+        }
+        const managers = await prisma.user.findMany({
+            where: {
+                OR: orConditions,
+                id: { not: user.id },
+            },
+            select: { id: true },
+        });
+        if (managers.length > 0) {
+            const fullName = `${request.user.firstName} ${request.user.lastName}`;
+            const dateStr = start.toLocaleDateString('tr-TR') === end.toLocaleDateString('tr-TR')
+                ? start.toLocaleDateString('tr-TR')
+                : `${start.toLocaleDateString('tr-TR')} - ${end.toLocaleDateString('tr-TR')}`;
+            notifyUsers(managers.map(m => m.id), {
+                type: 'LEAVE_REQUESTED',
+                title: 'Yeni izin talebi',
+                message: `${fullName}, ${dateStr} için ${days} günlük izin talep etti.`,
+                link: '/leaves',
+            }).catch(() => {});
+        }
+    } catch (e) {
+        console.warn('[leaves] manager notify failed:', e);
+    }
 
     return NextResponse.json({ request }, { status: 201 });
 }

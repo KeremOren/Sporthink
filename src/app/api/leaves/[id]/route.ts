@@ -3,6 +3,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
+import { notifyUser } from '@/lib/notify';
+
+// Tarih aralığı için formatter
+function formatDateRange(start: Date | string, end: Date | string) {
+    const s = new Date(start).toLocaleDateString('tr-TR');
+    const e = new Date(end).toLocaleDateString('tr-TR');
+    return s === e ? s : `${s} - ${e}`;
+}
 
 /**
  * PUT /api/leaves/[id]
@@ -112,6 +120,15 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             },
         });
 
+        // Bildirim: izin onaylandı
+        notifyUser({
+            userId: leave.userId,
+            type: 'LEAVE_APPROVED',
+            title: 'İzin talebiniz onaylandı',
+            message: `${formatDateRange(leave.startDate, leave.endDate)} tarihli ${leave.days} günlük izin talebiniz onaylandı.`,
+            link: '/leaves',
+        }).catch(() => {});
+
         return NextResponse.json({ request: updated });
     }
 
@@ -137,6 +154,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
                 details: JSON.stringify({ reason: rejectionReason || '' }),
             },
         });
+
+        // Bildirim: izin reddedildi
+        const reasonText = rejectionReason ? ` Sebep: ${rejectionReason}` : '';
+        notifyUser({
+            userId: leave.userId,
+            type: 'LEAVE_REJECTED',
+            title: 'İzin talebiniz reddedildi',
+            message: `${formatDateRange(leave.startDate, leave.endDate)} tarihli izin talebiniz reddedildi.${reasonText}`,
+            link: '/leaves',
+        }).catch(() => {});
 
         return NextResponse.json({ request: updated });
     }

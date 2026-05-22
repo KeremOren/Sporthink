@@ -1,24 +1,82 @@
 'use client';
 
 import { useState, useEffect, useRef, createContext, useContext, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 
+/**
+ * NotificationProvider — DB-backed (önceki localStorage versiyonunun yerine)
+ *
+ * - Mount'ta /api/notifications GET → son 50 bildirim
+ * - 30 saniyede bir polling (yeni bildirim için)
+ * - markAsRead / markAllAsRead / clearAll → ilgili API'yi çağırır
+ */
+
+// DB'den gelen ham notification tipi
+type DbNotification = {
+    id: string;
+    userId: string;
+    type: string;
+    title: string;
+    message: string;
+    link: string | null;
+    read: boolean;
+    createdAt: string;
+    readAt: string | null;
+};
+
+// UI tipi (tip alanı UI sınıfına map'lendi)
 type Notification = {
     id: string;
     title: string;
     message: string;
     type: 'info' | 'warning' | 'success' | 'training' | 'feedback';
+    rawType: string;
     read: boolean;
     createdAt: Date;
     link?: string;
 };
 
+// DB type → UI category
+const TYPE_TO_UI: Record<string, Notification['type']> = {
+    TRAINING_ASSIGNED: 'training',
+    QUIZ_FAILED_RETRY: 'warning',
+    TRAINING_OVERDUE: 'warning',
+    LEAVE_REQUESTED: 'info',
+    LEAVE_APPROVED: 'success',
+    LEAVE_REJECTED: 'warning',
+    SHIFT_ASSIGNED: 'info',
+    AI_RECOMMENDATION: 'training',
+    BADGE_EARNED: 'success',
+    KPI_ANOMALY: 'warning',
+    GENERAL: 'info',
+};
+
+function mapNotif(n: DbNotification): Notification {
+    return {
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: TYPE_TO_UI[n.type] || 'info',
+        rawType: n.type,
+        read: n.read,
+        createdAt: new Date(n.createdAt),
+        link: n.link || undefined,
+    };
+}
+
 type NotificationContextType = {
     notifications: Notification[];
     unreadCount: number;
-    addNotification: (n: Omit<Notification, 'id' | 'read' | 'createdAt'>) => void;
-    markAsRead: (id: string) => void;
-    markAllAsRead: () => void;
-    clearAll: () => void;
+    refresh: () => Promise<void>;
+    markAsRead: (id: string) => Promise<void>;
+    markAllAsRead: () => Promise<void>;
+    clearAll: () => Promise<void>;
+    /**
+     * Geriye dönük uyumluluk — sadece local (UI-only) bildirim ekler.
+     * DB'ye gitmez, sayfa yenilenince kaybolur.
+     * Gerçek bildirimler server-side notifyUser() ile gönderilmelidir.
+     */
+    addNotification: (n: { title: string; message: string; type: Notification['type']; link?: string }) => void;
 };
 
 const NotificationContext = createContext<NotificationContextType | null>(null);
@@ -30,49 +88,101 @@ export function useNotifications() {
 }
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
+    const { data: session, status } = useSession();
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
 
-    // Load from localStorage on mount
-    useEffect(() => {
+    const refresh = useCallback(async () => {
+        if (status !== 'authenticated') return;
         try {
-            const stored = localStorage.getItem('sporthink_notifications');
-            if (stored) setNotifications(JSON.parse(stored));
-        } catch { }
-    }, []);
+            const res = await fetch('/api/notifications', { cache: 'no-store' });
+            if (!res.ok) return;
+            const data = await res.json();
+            setNotifications((data.notifications || []).map(mapNotif));
+            setUnreadCount(data.unreadCount || 0);
+        } catch {
+            // sessiz başarısızlık
+        }
+    }, [status]);
 
-    // Persist to localStorage
+    // İlk yükleme + auth değişimi
     useEffect(() => {
-        try {
-            localStorage.setItem('sporthink_notifications', JSON.stringify(notifications));
-        } catch { }
-    }, [notifications]);
+        if (status === 'authenticated') {
+            refresh();
+        } else if (status === 'unauthenticated') {
+            setNotifications([]);
+            setUnreadCount(0);
+        }
+    }, [status, refresh]);
 
-    const addNotification = useCallback((n: Omit<Notification, 'id' | 'read' | 'createdAt'>) => {
-        const notif: Notification = {
-            ...n,
-            id: crypto.randomUUID(),
+    // 30 saniyede bir polling
+    useEffect(() => {
+        if (status !== 'authenticated') return;
+        const interval = setInterval(() => {
+            refresh();
+        }, 30000);
+        return () => clearInterval(interval);
+    }, [status, refresh]);
+
+    // Sayfa odak'a geldiğinde tazeleme (kullanıcı sekmeye dönünce)
+    useEffect(() => {
+        if (status !== 'authenticated') return;
+        const onFocus = () => refresh();
+        window.addEventListener('focus', onFocus);
+        return () => window.removeEventListener('focus', onFocus);
+    }, [status, refresh]);
+
+    const markAsRead = useCallback(async (id: string) => {
+        // Optimistic update
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+        // Local-only (UI-tetiklemeli) bildirimler DB'de yok
+        if (id.startsWith('local-')) return;
+        try {
+            await fetch(`/api/notifications/${id}`, { method: 'PUT' });
+        } catch {
+            refresh();
+        }
+    }, [refresh]);
+
+    const markAllAsRead = useCallback(async () => {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setUnreadCount(0);
+        try {
+            await fetch('/api/notifications/read-all', { method: 'PUT' });
+        } catch {
+            refresh();
+        }
+    }, [refresh]);
+
+    const clearAll = useCallback(async () => {
+        setNotifications([]);
+        setUnreadCount(0);
+        try {
+            await fetch('/api/notifications', { method: 'DELETE' });
+        } catch {
+            refresh();
+        }
+    }, [refresh]);
+
+    // Local-only (UI-tetiklemeli) bildirim — geriye dönük uyumluluk
+    const addNotification = useCallback((n: { title: string; message: string; type: Notification['type']; link?: string }) => {
+        const localNotif: Notification = {
+            id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            title: n.title,
+            message: n.message,
+            type: n.type,
+            rawType: 'GENERAL',
             read: false,
             createdAt: new Date(),
+            link: n.link,
         };
-        setNotifications(prev => [notif, ...prev].slice(0, 50));
+        setNotifications(prev => [localNotif, ...prev].slice(0, 50));
+        setUnreadCount(prev => prev + 1);
     }, []);
-
-    const markAsRead = useCallback((id: string) => {
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    }, []);
-
-    const markAllAsRead = useCallback(() => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    }, []);
-
-    const clearAll = useCallback(() => {
-        setNotifications([]);
-    }, []);
-
-    const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
-        <NotificationContext.Provider value={{ notifications, unreadCount, addNotification, markAsRead, markAllAsRead, clearAll }}>
+        <NotificationContext.Provider value={{ notifications, unreadCount, refresh, markAsRead, markAllAsRead, clearAll, addNotification }}>
             {children}
         </NotificationContext.Provider>
     );
@@ -216,7 +326,7 @@ export function NotificationBell() {
                                     {unreadCount > 0 && (
                                         <button
                                             className="notif-header-btn"
-                                            onClick={markAllAsRead}
+                                            onClick={() => { markAllAsRead(); }}
                                             title="Tümünü okundu işaretle"
                                         >
                                             <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>done_all</span>
@@ -225,7 +335,7 @@ export function NotificationBell() {
                                     {notifications.length > 0 && (
                                         <button
                                             className="notif-header-btn"
-                                            onClick={clearAll}
+                                            onClick={() => { clearAll(); }}
                                             title="Tümünü temizle"
                                         >
                                             <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>delete_sweep</span>
@@ -284,20 +394,6 @@ export function NotificationBell() {
                 </div>
                 </>
             )}
-        </div>
-    );
-}
-
-function SampleRow({ icon, color, label }: { icon: string; color: string; label: string }) {
-    return (
-        <div className="notif-empty-sample-row">
-            <span
-                className="notif-empty-sample-icon"
-                style={{ color, background: `${color}15` }}
-            >
-                <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>{icon}</span>
-            </span>
-            <span>{label}</span>
         </div>
     );
 }
