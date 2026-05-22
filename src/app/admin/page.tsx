@@ -18,6 +18,7 @@ export default function AdminPage() {
     const [showCreate, setShowCreate] = useState(false);
     const [editUser, setEditUser] = useState<any>(null);
     const [form, setForm] = useState({ email: '', password: 'default123', firstName: '', lastName: '', role: 'EMPLOYEE', storeId: '', regionId: '' });
+    const [userSearch, setUserSearch] = useState('');
 
     useEffect(() => { document.title = 'Sporthink | Yönetim'; }, []);
 
@@ -121,13 +122,57 @@ export default function AdminPage() {
                         ))}
                     </div>
 
-                    {tab === 'users' && (
+                    {tab === 'users' && (() => {
+                        const q = userSearch.trim().toLowerCase();
+                        const filteredUsers = q
+                            ? users.filter(u => {
+                                const fullName = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
+                                const email = (u.email || '').toLowerCase();
+                                const store = (u.store?.name || '').toLowerCase();
+                                const region = (u.region?.name || '').toLowerCase();
+                                const role = (ROLE_LABELS[u.role as keyof typeof ROLE_LABELS] || u.role || '').toLowerCase();
+                                return fullName.includes(q) || email.includes(q) || store.includes(q) || region.includes(q) || role.includes(q);
+                            })
+                            : users;
+                        return (
                         <>
-                            <div className="flex justify-between items-center mb-lg">
-                                <span className="text-secondary">{users.length} kayıtlı kullanıcı</span>
-                                <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
-                                    <span className="material-icons-outlined">person_add</span> Kullanıcı Ekle
-                                </button>
+                            <div className="flex justify-between items-center mb-lg" style={{ gap: 12, flexWrap: 'wrap' }}>
+                                <span className="text-secondary">
+                                    {q ? `${filteredUsers.length} / ${users.length}` : users.length} kayıtlı kullanıcı
+                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '1 1 auto', justifyContent: 'flex-end', minWidth: 240 }}>
+                                    <div style={{ position: 'relative', flex: '0 1 320px', minWidth: 220 }}>
+                                        <span className="material-icons-outlined" style={{
+                                            position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+                                            color: 'var(--text-tertiary)', fontSize: '1.05rem', pointerEvents: 'none',
+                                        }}>search</span>
+                                        <input
+                                            className="form-input"
+                                            style={{ paddingLeft: 36, paddingRight: userSearch ? 36 : 12, fontSize: '0.85rem', height: 36 }}
+                                            placeholder="İsim, email, mağaza, rol ara..."
+                                            value={userSearch}
+                                            onChange={e => setUserSearch(e.target.value)}
+                                        />
+                                        {userSearch && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setUserSearch('')}
+                                                style={{
+                                                    position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+                                                    background: 'transparent', border: 'none', cursor: 'pointer',
+                                                    color: 'var(--text-tertiary)', padding: 4,
+                                                    display: 'flex', alignItems: 'center',
+                                                }}
+                                                title="Aramayı temizle"
+                                            >
+                                                <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>close</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                    <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
+                                        <span className="material-icons-outlined">person_add</span> Kullanıcı Ekle
+                                    </button>
+                                </div>
                             </div>
 
                             {loading ? (
@@ -137,7 +182,14 @@ export default function AdminPage() {
                                     <table>
                                         <thead><tr><th>Kullanıcı</th><th>Rol</th><th>Mağaza</th><th>Bölge</th><th>Durum</th><th>İşlemler</th></tr></thead>
                                         <tbody>
-                                            {users.map(u => (
+                                            {filteredUsers.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={6} style={{ textAlign: 'center', padding: '32px 12px', color: 'var(--text-tertiary)' }}>
+                                                        <span className="material-icons-outlined" style={{ fontSize: '1.6rem', display: 'block', marginBottom: 4, opacity: 0.5 }}>search_off</span>
+                                                        &quot;{userSearch}&quot; için sonuç yok
+                                                    </td>
+                                                </tr>
+                                            ) : filteredUsers.map(u => (
                                                 <tr key={u.id} style={{ opacity: u.isActive === false ? 0.5 : 1 }}>
                                                     <td>
                                                         <div className="flex items-center gap-sm">
@@ -176,7 +228,8 @@ export default function AdminPage() {
                                 </div>
                             )}
                         </>
-                    )}
+                        );
+                    })()}
 
                     {tab === 'org' && (
                         <div className="chart-grid">
