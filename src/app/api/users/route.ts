@@ -27,6 +27,9 @@ export async function GET(req: Request) {
     if (role && user.role !== 'STORE_MANAGER') where.role = role;
     if (storeId) where.storeId = storeId;
 
+    // Sadece /employees sayfası _count ister; query param ile kontrol et
+    const withCount = searchParams.get('withCount') === '1';
+
     const users = await prisma.user.findMany({
         where,
         orderBy: { firstName: 'asc' },
@@ -35,17 +38,21 @@ export async function GET(req: Request) {
             hireDate: true, exitDate: true, isActive: true, storeId: true, regionId: true,
             store: { select: { id: true, name: true } },
             region: { select: { id: true, name: true } },
-            _count: {
-                select: {
-                    trainingAssignments: true,
-                    quizAttempts: true,
-                    submittedFeedback: true,
+            ...(withCount && {
+                _count: {
+                    select: {
+                        trainingAssignments: true,
+                        quizAttempts: true,
+                        submittedFeedback: true,
+                    },
                 },
-            },
+            }),
         },
     });
 
-    return NextResponse.json(users);
+    return NextResponse.json(users, {
+        headers: { 'Cache-Control': 'private, max-age=15' },
+    });
 }
 
 export async function POST(req: Request) {

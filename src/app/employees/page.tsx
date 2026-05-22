@@ -25,7 +25,7 @@ export default function EmployeesPage() {
 
     useEffect(() => {
         if (session) {
-            fetch('/api/users').then(r => r.json()).then(setUsers).finally(() => setLoading(false));
+            fetch('/api/users?withCount=1').then(r => r.json()).then(setUsers).finally(() => setLoading(false));
         }
     }, [session]);
 

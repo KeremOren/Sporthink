@@ -24,5 +24,7 @@ export async function GET() {
         }),
     ]);
 
-    return NextResponse.json({ regions, stores });
+    return NextResponse.json({ regions, stores }, {
+        headers: { 'Cache-Control': 'private, max-age=60' },
+    });
 }
