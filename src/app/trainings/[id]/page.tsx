@@ -35,6 +35,8 @@ export default function TrainingDetailPage() {
     const [addingContent, setAddingContent] = useState(false);
     const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
     const [showQuiz, setShowQuiz] = useState(false);
+    const [assignedSearch, setAssignedSearch] = useState('');
+    const [modalSearch, setModalSearch] = useState('');
 
     const user = session?.user as any;
 
@@ -70,6 +72,7 @@ export default function TrainingDetailPage() {
             showToast(`${selectedUsers.length} çalışana eğitim atandı`, 'success');
             setAssignModal(false);
             setSelectedUsers([]);
+            setModalSearch('');
             await refreshTraining();
         } catch {
             showToast('Atama sırasında hata oluştu', 'error');
@@ -548,9 +551,53 @@ export default function TrainingDetailPage() {
                             )}
 
                             {/* Assignments Table */}
-                            {user?.role !== 'EMPLOYEE' && training.assignments?.length > 0 && (
+                            {user?.role !== 'EMPLOYEE' && training.assignments?.length > 0 && (() => {
+                                const q = assignedSearch.trim().toLowerCase();
+                                const filteredAssignments = q
+                                    ? training.assignments.filter((a: any) => {
+                                        const fullName = `${a.user?.firstName || ''} ${a.user?.lastName || ''}`.toLowerCase();
+                                        const store = (a.user?.store?.name || '').toLowerCase();
+                                        return fullName.includes(q) || store.includes(q);
+                                    })
+                                    : training.assignments;
+                                return (
                                 <div style={{ marginTop: 'var(--space-xl)' }}>
-                                    <h3 style={{ marginBottom: 'var(--space-md)' }}>Atanmış Çalışanlar</h3>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)', gap: 12, flexWrap: 'wrap' }}>
+                                        <h3 style={{ margin: 0 }}>
+                                            Atanmış Çalışanlar
+                                            <span style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', fontWeight: 500, marginLeft: 8 }}>
+                                                ({q ? `${filteredAssignments.length} / ${training.assignments.length}` : training.assignments.length})
+                                            </span>
+                                        </h3>
+                                        <div style={{ position: 'relative', minWidth: 260, flex: '0 1 320px' }}>
+                                            <span className="material-icons-outlined" style={{
+                                                position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+                                                color: 'var(--text-tertiary)', fontSize: '1.05rem', pointerEvents: 'none',
+                                            }}>search</span>
+                                            <input
+                                                className="form-input"
+                                                style={{ paddingLeft: 36, paddingRight: assignedSearch ? 36 : 12, fontSize: '0.85rem' }}
+                                                placeholder="İsim, soyisim veya mağaza ara..."
+                                                value={assignedSearch}
+                                                onChange={e => setAssignedSearch(e.target.value)}
+                                            />
+                                            {assignedSearch && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAssignedSearch('')}
+                                                    style={{
+                                                        position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+                                                        background: 'transparent', border: 'none', cursor: 'pointer',
+                                                        color: 'var(--text-tertiary)', padding: 4,
+                                                        display: 'flex', alignItems: 'center',
+                                                    }}
+                                                    title="Aramayı temizle"
+                                                >
+                                                    <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>close</span>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
                                     <div className="table-container">
                                         <table>
                                             <thead>
@@ -562,7 +609,14 @@ export default function TrainingDetailPage() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {training.assignments.map((a: any) => (
+                                                {filteredAssignments.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={4} style={{ textAlign: 'center', padding: '24px 12px', color: 'var(--text-tertiary)', fontSize: '0.85rem' }}>
+                                                            <span className="material-icons-outlined" style={{ fontSize: '1.4rem', display: 'block', marginBottom: 4, opacity: 0.5 }}>search_off</span>
+                                                            "{assignedSearch}" için sonuç yok
+                                                        </td>
+                                                    </tr>
+                                                ) : filteredAssignments.map((a: any) => (
                                                     <tr key={a.id}>
                                                         <td>{a.user.firstName} {a.user.lastName}</td>
                                                         <td>{a.user.store?.name || '-'}</td>
@@ -592,7 +646,8 @@ export default function TrainingDetailPage() {
                                         </table>
                                     </div>
                                 </div>
-                            )}
+                                );
+                            })()}
                         </>
                     )}
                 </div>
@@ -610,9 +665,63 @@ export default function TrainingDetailPage() {
                             <div className="modal-body">
                                 {users.length === 0 ? (
                                     <div className="loading-center"><div className="spinner" /></div>
-                                ) : (
+                                ) : (() => {
+                                    const q = modalSearch.trim().toLowerCase();
+                                    const filteredUsers = q
+                                        ? users.filter(u => {
+                                            const fullName = `${u.firstName || ''} ${u.lastName || ''}`.toLowerCase();
+                                            const store = (u.store?.name || '').toLowerCase();
+                                            const email = (u.email || '').toLowerCase();
+                                            return fullName.includes(q) || store.includes(q) || email.includes(q);
+                                        })
+                                        : users;
+                                    return (
+                                    <>
+                                    {/* Search input */}
+                                    <div style={{ position: 'relative', marginBottom: 10 }}>
+                                        <span className="material-icons-outlined" style={{
+                                            position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+                                            color: 'var(--text-tertiary)', fontSize: '1.05rem', pointerEvents: 'none',
+                                        }}>search</span>
+                                        <input
+                                            className="form-input"
+                                            style={{ paddingLeft: 36, paddingRight: modalSearch ? 36 : 12 }}
+                                            placeholder="İsim, soyisim veya mağaza ara..."
+                                            value={modalSearch}
+                                            onChange={e => setModalSearch(e.target.value)}
+                                            autoFocus
+                                        />
+                                        {modalSearch && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setModalSearch('')}
+                                                style={{
+                                                    position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+                                                    background: 'transparent', border: 'none', cursor: 'pointer',
+                                                    color: 'var(--text-tertiary)', padding: 4,
+                                                    display: 'flex', alignItems: 'center',
+                                                }}
+                                                title="Aramayı temizle"
+                                            >
+                                                <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>close</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)', marginBottom: 6 }}>
+                                        {q ? `${filteredUsers.length} sonuç bulundu` : `${users.length} çalışan listeleniyor`}
+                                    </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', maxHeight: 400, overflowY: 'auto' }}>
-                                        {users.map(u => {
+                                        {filteredUsers.length === 0 ? (
+                                            <div style={{
+                                                padding: 24, textAlign: 'center',
+                                                color: 'var(--text-tertiary)', fontSize: '0.82rem',
+                                            }}>
+                                                <span className="material-icons-outlined" style={{ fontSize: '1.6rem', display: 'block', marginBottom: 4, opacity: 0.5 }}>
+                                                    search_off
+                                                </span>
+                                                "{modalSearch}" için sonuç yok
+                                            </div>
+                                        ) : filteredUsers.map(u => {
                                             const alreadyAssigned = training?.assignments?.some((a: any) => a.userId === u.id);
                                             return (
                                                 <label key={u.id} className="form-checkbox" style={{
@@ -639,7 +748,9 @@ export default function TrainingDetailPage() {
                                             );
                                         })}
                                     </div>
-                                )}
+                                    </>
+                                    );
+                                })()}
                             </div>
                             <div className="modal-footer">
                                 <button className="btn btn-ghost" onClick={() => setAssignModal(false)}>İptal</button>
