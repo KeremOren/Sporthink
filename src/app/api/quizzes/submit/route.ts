@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { notifyUser } from '@/lib/notify';
-import { awardXp, checkAndAwardBadges, XP_REWARDS } from '@/lib/gamification';
 
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
@@ -66,60 +65,13 @@ export async function POST(req: Request) {
     });
 
     let autoRetry = false;
-    let xpAwarded = 0;
-    let newBadges: string[] = [];
 
     // If passed, mark training assignment as completed
     if (passed) {
-        // Önceki tamamlanmamış atamayı COMPLETED yap
-        const updateResult = await prisma.trainingAssignment.updateMany({
+        await prisma.trainingAssignment.updateMany({
             where: { trainingId: quiz.trainingId, userId: user.id, status: { not: 'COMPLETED' } },
             data: { status: 'COMPLETED', completedAt: new Date() },
         });
-
-        // === XP + ROZET ÖDÜLLERİ ===
-        // 1. Quiz geçti → XP
-        const quizXp = score === 100 ? XP_REWARDS.QUIZ_PERFECT : XP_REWARDS.QUIZ_PASS;
-        await awardXp({
-            userId: user.id,
-            amount: quizXp,
-            source: 'QUIZ_PASS',
-            sourceId: quizId,
-            reason: score === 100 ? `Mükemmel skor: ${quiz.training?.title || 'Quiz'}` : `Quiz başarıyla geçildi: ${quiz.training?.title || 'Quiz'}`,
-        });
-        xpAwarded += quizXp;
-
-        // 2. Eğitim tamamlandıysa training XP'si de ver
-        if (updateResult.count > 0 && quiz.training?.id) {
-            await awardXp({
-                userId: user.id,
-                amount: XP_REWARDS.TRAINING_COMPLETE,
-                source: 'TRAINING_COMPLETE',
-                sourceId: quiz.training.id,
-                reason: `Eğitim tamamlandı: ${quiz.training.title || ''}`,
-            });
-            xpAwarded += XP_REWARDS.TRAINING_COMPLETE;
-        }
-
-        // 3. Otomatik rozet kontrolü
-        try {
-            newBadges = await checkAndAwardBadges(user.id);
-            // Yeni rozet kazandıysa bildirim gönder
-            for (const code of newBadges) {
-                const badge = await prisma.badge.findUnique({ where: { code } });
-                if (badge) {
-                    notifyUser({
-                        userId: user.id,
-                        type: 'BADGE_EARNED',
-                        title: 'Yeni rozet kazandın! 🏆',
-                        message: `"${badge.name}" — ${badge.description}`,
-                        link: '/achievements',
-                    }).catch(() => {});
-                }
-            }
-        } catch (e) {
-            console.warn('[quiz] badge check failed:', e);
-        }
     } else {
         // Check if all attempts exhausted and still failed → auto-retry
         const remainingAttempts = quiz.maxAttempts - previousAttempts - 1;
@@ -187,8 +139,6 @@ export async function POST(req: Request) {
         score,
         passScore: minPass,
         passed,
-        xpAwarded,
-        newBadges,
         totalQuestions: quiz.questions.length,
         correctAnswers: correctCount,
         remainingAttempts: quiz.maxAttempts - previousAttempts - 1,

@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { awardXp, checkAndAwardBadges } from '@/lib/gamification';
-import { notifyUser } from '@/lib/notify';
 
 type Scores = { empati: number; bilgi: number; caprazSatis: number; kapanis: number };
 type Choice = { text: string; scores: Scores; feedback?: string; isBest?: boolean };
@@ -181,35 +179,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
         },
     });
 
-    // === XP LEDGER + ROZET KONTROLÜ ===
-    if (xpEarned > 0) {
-        await awardXp({
-            userId: user.id,
-            amount: xpEarned,
-            source: 'SIMULATION',
-            sourceId: attempt.id,
-            reason: `Simülasyon: skor ${overall}`,
-        });
-    }
-    let newBadges: string[] = [];
-    try {
-        newBadges = await checkAndAwardBadges(user.id);
-        for (const code of newBadges) {
-            const badgeRow = await prisma.badge.findUnique({ where: { code } });
-            if (badgeRow) {
-                notifyUser({
-                    userId: user.id,
-                    type: 'BADGE_EARNED',
-                    title: 'Yeni rozet kazandın! 🏆',
-                    message: `"${badgeRow.name}" — ${badgeRow.description}`,
-                    link: '/achievements',
-                }).catch(() => {});
-            }
-        }
-    } catch (e) {
-        console.warn('[sim] badge check failed:', e);
-    }
-
     return NextResponse.json({
         attemptId: attempt.id,
         score: overall,
@@ -221,7 +190,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
         },
         xpEarned,
         badge,
-        newBadges,
         breakdown,
     });
 }

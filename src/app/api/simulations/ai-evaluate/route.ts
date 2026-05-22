@@ -3,8 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
-import { awardXp, checkAndAwardBadges } from '@/lib/gamification';
-import { notifyUser } from '@/lib/notify';
 
 const CATEGORY_LABEL: Record<string, string> = {
     MUSTERI_KARSILAMA: 'Müşteri Karşılama',
@@ -167,42 +165,12 @@ Türkçe yaz. Sadece JSON döndür.`;
         },
     });
 
-    // === XP LEDGER + ROZET KONTROLÜ ===
-    if (xpEarned > 0) {
-        await awardXp({
-            userId: user.id,
-            amount: xpEarned,
-            source: 'SIMULATION',
-            sourceId: attempt.id,
-            reason: `AI Roleplay simülasyon: skor ${overall}`,
-        });
-    }
-    let newBadges: string[] = [];
-    try {
-        newBadges = await checkAndAwardBadges(user.id);
-        for (const code of newBadges) {
-            const badgeRow = await prisma.badge.findUnique({ where: { code } });
-            if (badgeRow) {
-                notifyUser({
-                    userId: user.id,
-                    type: 'BADGE_EARNED',
-                    title: 'Yeni rozet kazandın! 🏆',
-                    message: `"${badgeRow.name}" — ${badgeRow.description}`,
-                    link: '/achievements',
-                }).catch(() => {});
-            }
-        }
-    } catch (e) {
-        console.warn('[sim-ai] badge check failed:', e);
-    }
-
     return NextResponse.json({
         attemptId: attempt.id,
         score: overall,
         scores,
         xpEarned,
         badge,
-        newBadges,
         summary: evaluation.summary || '',
         strengths: Array.isArray(evaluation.strengths) ? evaluation.strengths : [],
         improvements: Array.isArray(evaluation.improvements) ? evaluation.improvements : [],
