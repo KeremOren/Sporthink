@@ -95,7 +95,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     const refresh = useCallback(async () => {
         if (status !== 'authenticated') return;
         try {
-            const res = await fetch('/api/notifications', { cache: 'no-store' });
+            // Cache-Control header (api'de 10sn) tarayıcının önbelleğini kullanmasına izin ver
+            const res = await fetch('/api/notifications');
             if (!res.ok) return;
             const data = await res.json();
             setNotifications((data.notifications || []).map(mapNotif));
@@ -105,32 +106,29 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         }
     }, [status]);
 
-    // İlk yükleme + auth değişimi
+    // İlk yükleme — sayfa render'ını engellemesin diye 800ms gecikmeli
+    // (kullanıcı önce sayfayı görsün, sonra çan ikonu güncellensin)
     useEffect(() => {
         if (status === 'authenticated') {
-            refresh();
+            const timer = setTimeout(() => { refresh(); }, 800);
+            return () => clearTimeout(timer);
         } else if (status === 'unauthenticated') {
             setNotifications([]);
             setUnreadCount(0);
         }
     }, [status, refresh]);
 
-    // 30 saniyede bir polling
+    // 60 saniyede bir polling (eskisi 30sn idi — sunucuyu rahatlatmak için seyrekleştirildi)
     useEffect(() => {
         if (status !== 'authenticated') return;
         const interval = setInterval(() => {
             refresh();
-        }, 30000);
+        }, 60000);
         return () => clearInterval(interval);
     }, [status, refresh]);
 
-    // Sayfa odak'a geldiğinde tazeleme (kullanıcı sekmeye dönünce)
-    useEffect(() => {
-        if (status !== 'authenticated') return;
-        const onFocus = () => refresh();
-        window.addEventListener('focus', onFocus);
-        return () => window.removeEventListener('focus', onFocus);
-    }, [status, refresh]);
+    // NOT: focus event listener kaldırıldı — gereksiz fetch atıyordu
+    // 60sn polling + manuel bildirim açılışı yeterli
 
     const markAsRead = useCallback(async (id: string) => {
         // Optimistic update

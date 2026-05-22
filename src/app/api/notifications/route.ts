@@ -28,11 +28,18 @@ export async function GET(req: Request) {
             where,
             orderBy: { createdAt: 'desc' },
             take: 50,
+            select: {
+                id: true, userId: true, type: true, title: true, message: true,
+                link: true, read: true, createdAt: true, readAt: true,
+            },
         }),
         prisma.notification.count({ where: { userId: user.id, read: false } }),
     ]);
 
-    return NextResponse.json({ notifications, unreadCount });
+    return NextResponse.json(
+        { notifications, unreadCount },
+        { headers: { 'Cache-Control': 'private, max-age=10' } }
+    );
 }
 
 export async function DELETE() {
