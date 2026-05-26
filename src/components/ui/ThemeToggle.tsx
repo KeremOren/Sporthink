@@ -24,19 +24,27 @@ export function ThemeToggle() {
         <button
             onClick={toggle}
             title={theme === 'dark' ? 'Açık Tema' : 'Koyu Tema'}
+            aria-label={theme === 'dark' ? 'Açık Tema' : 'Koyu Tema'}
             style={{
                 background: 'none',
                 border: 'none',
-                color: 'var(--text-tertiary)',
+                color: theme === 'dark' ? '#fbbf24' : '#6366f1',
                 cursor: 'pointer',
-                padding: '4px',
+                padding: '6px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'color 0.2s ease',
+                transition: 'all 0.25s ease',
+                borderRadius: 8,
+            }}
+            onMouseEnter={e => {
+                e.currentTarget.style.transform = 'rotate(20deg)';
+            }}
+            onMouseLeave={e => {
+                e.currentTarget.style.transform = 'rotate(0deg)';
             }}
         >
-            <span className="material-icons-outlined" style={{ fontSize: '1.2rem' }}>
+            <span className="material-icons-outlined" style={{ fontSize: '1.35rem' }}>
                 {theme === 'dark' ? 'light_mode' : 'dark_mode'}
             </span>
         </button>

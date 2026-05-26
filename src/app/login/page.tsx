@@ -3,6 +3,7 @@
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -40,6 +41,23 @@ export default function LoginPage() {
 
     return (
         <div className="login-page">
+            {/* Sağ üstte tema değiştirici */}
+            <div style={{
+                position: 'fixed',
+                top: 16,
+                right: 16,
+                zIndex: 10,
+                background: 'var(--glass-bg)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid var(--card-border)',
+                borderRadius: 999,
+                padding: '6px 10px',
+                display: 'flex',
+                alignItems: 'center',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
+            }}>
+                <ThemeToggle />
+            </div>
             <div className="login-card">
                 <div className="login-logo">
                     <div style={{ fontSize: '2.2rem', fontWeight: 800, letterSpacing: '-1.5px', color: 'var(--text-primary)', lineHeight: 1 }}>

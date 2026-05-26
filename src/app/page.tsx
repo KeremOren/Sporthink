@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 function AnimatedCounter({ target, suffix = '' }: { target: string; suffix?: string }) {
   const [count, setCount] = useState(0);
@@ -67,9 +68,12 @@ export default function LandingPage() {
             <div className="landing-logo-icon"><span style={{ color: '#fff' }}>sp</span><span style={{ color: '#E53935' }}>o</span></div>
             <span style={{ letterSpacing: '-0.5px' }}>sp<span style={{ color: '#E53935' }}>o</span>rthink</span>
           </div>
-          <button className="btn btn-primary" onClick={() => router.push('/login')}>
-            <span className="material-icons-outlined">login</span> Giriş Yap
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <ThemeToggle />
+            <button className="btn btn-primary" onClick={() => router.push('/login')}>
+              <span className="material-icons-outlined">login</span> Giriş Yap
+            </button>
+          </div>
         </div>
       </nav>
 
