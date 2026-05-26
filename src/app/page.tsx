@@ -68,10 +68,38 @@ export default function LandingPage() {
             <div className="landing-logo-icon"><span style={{ color: '#fff' }}>sp</span><span style={{ color: '#E53935' }}>o</span></div>
             <span style={{ letterSpacing: '-0.5px' }}>sp<span style={{ color: '#E53935' }}>o</span>rthink</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <ThemeToggle />
-            <button className="btn btn-primary" onClick={() => router.push('/login')}>
-              <span className="material-icons-outlined">login</span> Giriş Yap
+            <button
+              onClick={() => router.push('/login')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 22px',
+                background: 'linear-gradient(135deg, #E53935 0%, #c62828 50%, #b71c1c 100%)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 12,
+                fontSize: '0.9rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 6px 20px rgba(229, 57, 53, 0.45), inset 0 1px 0 rgba(255,255,255,0.15)',
+                transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
+                letterSpacing: '0.3px',
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 10px 28px rgba(229, 57, 53, 0.6), inset 0 1px 0 rgba(255,255,255,0.2)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(229, 57, 53, 0.45), inset 0 1px 0 rgba(255,255,255,0.15)';
+              }}
+            >
+              <span className="material-icons-outlined" style={{ fontSize: '1.15rem' }}>login</span>
+              Giriş Yap
+              <span className="material-icons-outlined" style={{ fontSize: '1rem', marginLeft: 2 }}>arrow_forward</span>
             </button>
           </div>
         </div>
