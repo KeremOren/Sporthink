@@ -100,19 +100,14 @@ export default function QuizModal({ quizId, trainingTitle, onClose, onPassed, on
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ quizId: quiz.id, answers }),
             });
-            const data = await res.json();
-            if (!res.ok) {
-                showToast(data?.error || 'Sınav gönderilemedi', 'error');
-                return;
-            }
-            const result = data as SubmitResult;
-            setResult(result);
-            if (result.passed) {
+            const data: SubmitResult = await res.json();
+            setResult(data);
+            if (data.passed) {
                 showToast('Tebrikler! Sınavı geçtiniz', 'success');
-                onPassed?.(result);
+                onPassed?.(data);
             } else {
                 showToast('Geçer not alınamadı', 'warning');
-                onFailed?.(result);
+                onFailed?.(data);
             }
         } catch {
             showToast('Sınav gönderilirken hata oluştu', 'error');
