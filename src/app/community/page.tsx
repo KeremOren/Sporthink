@@ -88,7 +88,6 @@ export default function CommunityPage() {
     };
 
     const handleDeleteComment = async (commentId: string) => {
-        if (!confirm('Bu yorumu silmek istediğine emin misin?')) return;
         try {
             const res = await fetch(`/api/community?commentId=${commentId}`, { method: 'DELETE' });
             if (!res.ok) throw new Error();
