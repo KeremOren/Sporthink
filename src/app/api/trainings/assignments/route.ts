@@ -95,7 +95,7 @@ export async function PUT(req: Request) {
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { assignmentId, status } = await req.json();
-    const validStatuses = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'];
+    const validStatuses = ['NOT_STARTED', 'IN_PROGRESS', 'READY_FOR_QUIZ', 'COMPLETED'];
 
     if (!validStatuses.includes(status)) {
         return NextResponse.json({ error: 'Invalid status' }, { status: 400 });

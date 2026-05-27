@@ -149,11 +149,11 @@ export default function TrainingDetailPage() {
         }
     };
 
-    // Pre-fill completedSteps if assignment is already COMPLETED (allow re-taking quiz)
+    // Pre-fill completedSteps if assignment is COMPLETED or READY_FOR_QUIZ (all sections previously read)
     useEffect(() => {
         if (!training || user?.role !== 'EMPLOYEE') return;
         const a = training.assignments?.find((x: any) => x.userId === user?.id);
-        if (a && a.status === 'COMPLETED') {
+        if (a && (a.status === 'COMPLETED' || a.status === 'READY_FOR_QUIZ')) {
             const total = training.contents?.length || 0;
             setCompletedSteps(new Set(Array.from({ length: total }, (_, i) => i)));
         }
@@ -203,6 +203,17 @@ export default function TrainingDetailPage() {
                     onAllCompleted={async () => {
                         if (!training.quiz) {
                             await handleComplete();
+                        } else {
+                            // Tüm bölümler okundu → quiz'e hazır olarak işaretle (kullanıcı menüye dönerse Quiz butonu açık olsun)
+                            const a = training.assignments?.find((x: any) => x.userId === user?.id);
+                            if (a && a.status !== 'COMPLETED' && a.status !== 'READY_FOR_QUIZ') {
+                                await fetch('/api/trainings/assignments', {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ assignmentId: a.id, status: 'READY_FOR_QUIZ' }),
+                                }).catch(() => {});
+                                await refreshTraining();
+                            }
                         }
                     }}
                     hasQuiz={!!training.quiz}

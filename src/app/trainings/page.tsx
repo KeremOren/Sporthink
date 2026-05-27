@@ -103,7 +103,7 @@ export default function TrainingsPage() {
             const a = myAssignments[t.id];
             if (!a) return 'NOT_STARTED';
             if (a.status === 'COMPLETED') return 'COMPLETED';
-            if (a.status === 'IN_PROGRESS') return 'IN_PROGRESS';
+            if (a.status === 'IN_PROGRESS' || a.status === 'READY_FOR_QUIZ') return 'IN_PROGRESS';
             return 'NOT_STARTED';
         };
 
@@ -338,18 +338,18 @@ export default function TrainingsPage() {
                                                     {isCompleted ? 'Tekrar Görüntüle' : isInProgress ? 'Devam Et' : 'Görüntüle'}
                                                 </button>
                                                 {t.quiz && (() => {
-                                                    const quizUnlocked = isCompleted || isInProgress;
+                                                    const quizUnlocked = a?.status === 'COMPLETED' || a?.status === 'READY_FOR_QUIZ';
                                                     return (
                                                         <button
                                                             onClick={() => {
                                                                 if (quizUnlocked) {
                                                                     router.push(`/trainings/${t.id}?quiz=1`);
                                                                 } else {
-                                                                    showToast('Önce eğitimi başlat ve bölümleri oku', 'error');
+                                                                    showToast('Önce tüm bölümleri okumalısın', 'error');
                                                                     router.push(`/trainings/${t.id}`);
                                                                 }
                                                             }}
-                                                            title={quizUnlocked ? 'Sınava başla' : 'Eğitimi başlattıktan sonra sınava girebilirsin'}
+                                                            title={quizUnlocked ? 'Sınava başla' : 'Tüm bölümleri okuduktan sonra sınava girebilirsin'}
                                                             style={{
                                                                 padding: '10px 14px', borderRadius: 10,
                                                                 background: quizUnlocked ? 'rgba(229,57,53,0.12)' : 'rgba(148,163,184,0.12)',
