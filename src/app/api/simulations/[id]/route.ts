@@ -25,11 +25,24 @@ export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }
     if (!scenario) return NextResponse.json({ error: 'Senaryo bulunamadı' }, { status: 404 });
 
     const steps = parseSteps(scenario.steps);
-    // Strip evaluation fields from choices when sending to client (anti-cheat)
-    const safeSteps = steps.map(s => ({
-        npc: s.npc,
-        choices: s.choices.map(c => ({ text: c.text })),
-    }));
+
+    // Fisher-Yates shuffle — her oyunda farklı sırada gelsin (ezberlemeyi engeller)
+    const shuffle = <T,>(arr: T[]): T[] => {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    };
+
+    // Strip evaluation fields + her step'in cevap seçeneklerini karıştır
+    // originalIndex ile client orijinal index'i geri gönderir → server scoring aynı çalışır
+    const safeSteps = steps.map(s => {
+        const indexed = s.choices.map((c, i) => ({ text: c.text, originalIndex: i }));
+        const shuffled = shuffle(indexed);
+        return { npc: s.npc, choices: shuffled };
+    });
 
     const myAttempts = await prisma.simAttempt.findMany({
         where: { userId: user.id, scenarioId: id },

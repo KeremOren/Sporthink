@@ -22,7 +22,7 @@ const BADGE_META: Record<string, { label: string; icon: string; color: string }>
     URUN_UZMANI: { label: 'Ürün Uzmanı', icon: 'school', color: '#3b82f6' },
 };
 
-type Step = { npc: string; choices: { text: string }[] };
+type Step = { npc: string; choices: { text: string; originalIndex: number }[] };
 
 type ScenarioData = {
     id: string;
@@ -538,7 +538,7 @@ function PlayView({ step, stepIndex, totalSteps, progress, cat, scenario, submit
                     <button
                         key={idx}
                         disabled={submitting}
-                        onClick={() => onChoose(idx)}
+                        onClick={() => onChoose(choice.originalIndex ?? idx)}
                         style={{
                             display: 'flex', alignItems: 'center', gap: 14,
                             padding: '14px 18px', textAlign: 'left',
