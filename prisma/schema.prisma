@@ -452,13 +452,17 @@ model CommunityComment {
   id        String   @id @default(uuid())
   postId    String
   authorId  String
+  parentId  String?  // Yanıt için — başka yoruma cevap veriyorsa
   content   String
   createdAt DateTime @default(now())
 
-  post   CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  author User          @relation(fields: [authorId], references: [id])
+  post     CommunityPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author   User               @relation(fields: [authorId], references: [id])
+  parent   CommunityComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  CommunityComment[] @relation("CommentReplies")
 
   @@index([postId])
+  @@index([parentId])
 }
 
 // ==================== Sales Simulation ====================

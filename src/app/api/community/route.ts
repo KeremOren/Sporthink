@@ -29,6 +29,45 @@ export async function GET(req: Request) {
     return NextResponse.json(posts);
 }
 
+/**
+ * DELETE /api/community?commentId=xxx → yorum sil
+ * Sahibi veya SUPER_ADMIN silebilir
+ */
+export async function DELETE(req: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const user = session.user as any;
+    const { searchParams } = new URL(req.url);
+    const commentId = searchParams.get('commentId');
+    const postId = searchParams.get('postId');
+
+    // Yorum silme
+    if (commentId) {
+        const comment = await prisma.communityComment.findUnique({ where: { id: commentId } });
+        if (!comment) return NextResponse.json({ error: 'Yorum bulunamadı' }, { status: 404 });
+        // Sadece sahibi veya admin silebilir
+        if (comment.authorId !== user.id && user.role !== 'SUPER_ADMIN') {
+            return NextResponse.json({ error: 'Sadece kendi yorumunuzu silebilirsiniz' }, { status: 403 });
+        }
+        await prisma.communityComment.delete({ where: { id: commentId } });
+        return NextResponse.json({ success: true });
+    }
+
+    // Gönderi silme
+    if (postId) {
+        const post = await prisma.communityPost.findUnique({ where: { id: postId } });
+        if (!post) return NextResponse.json({ error: 'Gönderi bulunamadı' }, { status: 404 });
+        if (post.authorId !== user.id && user.role !== 'SUPER_ADMIN') {
+            return NextResponse.json({ error: 'Sadece kendi gönderinizi silebilirsiniz' }, { status: 403 });
+        }
+        await prisma.communityPost.delete({ where: { id: postId } });
+        return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: 'commentId veya postId gerekli' }, { status: 400 });
+}
+
 export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -53,13 +92,14 @@ export async function POST(req: Request) {
         return NextResponse.json(post, { status: 201 });
     }
 
-    // Add comment
+    // Add comment (or reply)
     if (body.action === 'add_comment') {
         const comment = await prisma.communityComment.create({
             data: {
                 postId: body.postId,
                 content: body.content,
                 authorId: user.id,
+                parentId: body.parentId || null,  // Yanıt verirken parentId set edilir
             },
             include: { author: { select: { id: true, firstName: true, lastName: true, role: true } } },
         });

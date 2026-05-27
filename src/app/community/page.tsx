@@ -24,6 +24,8 @@ export default function CommunityPage() {
     const [filterCat, setFilterCat] = useState('');
     const [form, setForm] = useState({ title: '', content: '', category: 'TIPS' });
     const [commentText, setCommentText] = useState<Record<string, string>>({});
+    const [replyText, setReplyText] = useState<Record<string, string>>({});  // commentId → text
+    const [replyingTo, setReplyingTo] = useState<string | null>(null);  // hangi yorumun reply kutusu açık
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => { document.title = 'Sporthink | Topluluk'; }, []);
@@ -68,6 +70,31 @@ export default function CommunityPage() {
             setCommentText({ ...commentText, [postId]: '' });
             fetchPosts();
         } catch { showToast('Yorum eklenirken hata', 'error'); }
+    };
+
+    const handleReply = async (postId: string, parentId: string) => {
+        const text = replyText[parentId]?.trim();
+        if (!text) return;
+        try {
+            const res = await fetch('/api/community', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'add_comment', postId, content: text, parentId }),
+            });
+            if (!res.ok) throw new Error();
+            setReplyText({ ...replyText, [parentId]: '' });
+            setReplyingTo(null);
+            fetchPosts();
+        } catch { showToast('Yanıt gönderilirken hata', 'error'); }
+    };
+
+    const handleDeleteComment = async (commentId: string) => {
+        if (!confirm('Bu yorumu silmek istediğine emin misin?')) return;
+        try {
+            const res = await fetch(`/api/community?commentId=${commentId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error();
+            showToast('Yorum silindi', 'success');
+            fetchPosts();
+        } catch { showToast('Silinirken hata oluştu', 'error'); }
     };
 
     if (!session) return null;
@@ -146,27 +173,117 @@ export default function CommunityPage() {
                                         <div style={{ fontSize: '0.88rem', lineHeight: 1.7, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{post.content}</div>
 
                                         {/* Comments */}
-                                        {post.comments?.length > 0 && (
-                                            <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
-                                                <div style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: 8, color: 'var(--text-tertiary)' }}>
-                                                    {post.comments.length} yorum
-                                                </div>
-                                                {post.comments.map((c: any) => (
-                                                    <div key={c.id} style={{ display: 'flex', gap: 8, marginBottom: 10, paddingLeft: 8 }}>
-                                                        <div className="sidebar-avatar" style={{ width: 28, height: 28, fontSize: '0.6rem', flexShrink: 0 }}>
-                                                            {c.author?.firstName?.[0]}{c.author?.lastName?.[0]}
-                                                        </div>
-                                                        <div>
-                                                            <div style={{ fontSize: '0.78rem' }}>
-                                                                <span style={{ fontWeight: 600 }}>{c.author?.firstName} {c.author?.lastName}</span>
-                                                                <span className="text-xs text-secondary" style={{ marginLeft: 8 }}>{formatDateTime(c.createdAt)}</span>
+                                        {post.comments?.length > 0 && (() => {
+                                            // Top-level (parentId yok) ve reply'ları gruplandır
+                                            const topLevel = post.comments.filter((c: any) => !c.parentId);
+                                            const repliesByParent: Record<string, any[]> = {};
+                                            for (const c of post.comments) {
+                                                if (c.parentId) {
+                                                    if (!repliesByParent[c.parentId]) repliesByParent[c.parentId] = [];
+                                                    repliesByParent[c.parentId].push(c);
+                                                }
+                                            }
+
+                                            const renderComment = (c: any, isReply = false) => {
+                                                const canDelete = c.author?.id === user.id || user.role === 'SUPER_ADMIN';
+                                                const replies = repliesByParent[c.id] || [];
+                                                return (
+                                                    <div key={c.id} style={{ marginBottom: 12, paddingLeft: isReply ? 28 : 8 }}>
+                                                        <div style={{ display: 'flex', gap: 8 }}>
+                                                            <div className="sidebar-avatar" style={{ width: 28, height: 28, fontSize: '0.6rem', flexShrink: 0 }}>
+                                                                {c.author?.firstName?.[0]}{c.author?.lastName?.[0]}
                                                             </div>
-                                                            <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: 2 }}>{c.content}</div>
+                                                            <div style={{ flex: 1 }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                    <span style={{ fontWeight: 600, fontSize: '0.78rem' }}>{c.author?.firstName} {c.author?.lastName}</span>
+                                                                    <span className="text-xs text-secondary">{formatDateTime(c.createdAt)}</span>
+                                                                    {canDelete && (
+                                                                        <button
+                                                                            onClick={() => handleDeleteComment(c.id)}
+                                                                            title="Yorumu sil"
+                                                                            style={{
+                                                                                background: 'transparent', border: 'none', cursor: 'pointer',
+                                                                                color: '#ef4444', padding: 2, display: 'inline-flex',
+                                                                                alignItems: 'center', marginLeft: 'auto', opacity: 0.65,
+                                                                            }}
+                                                                            onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
+                                                                            onMouseLeave={e => { e.currentTarget.style.opacity = '0.65'; }}
+                                                                        >
+                                                                            <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>delete</span>
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: 2 }}>{c.content}</div>
+                                                                {!isReply && (
+                                                                    <button
+                                                                        onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
+                                                                        style={{
+                                                                            background: 'transparent', border: 'none', cursor: 'pointer',
+                                                                            color: 'var(--primary)', fontSize: '0.72rem', fontWeight: 600,
+                                                                            padding: '2px 0', marginTop: 4, display: 'inline-flex',
+                                                                            alignItems: 'center', gap: 3,
+                                                                        }}
+                                                                    >
+                                                                        <span className="material-icons-outlined" style={{ fontSize: '0.85rem' }}>reply</span>
+                                                                        Yanıtla
+                                                                    </button>
+                                                                )}
+
+                                                                {/* Reply input */}
+                                                                {replyingTo === c.id && (
+                                                                    <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                                                                        <input
+                                                                            className="form-input"
+                                                                            style={{ flex: 1, fontSize: '0.78rem', padding: '6px 10px' }}
+                                                                            placeholder={`${c.author?.firstName} ${c.author?.lastName}'ya yanıt yaz...`}
+                                                                            value={replyText[c.id] || ''}
+                                                                            onChange={e => setReplyText({ ...replyText, [c.id]: e.target.value })}
+                                                                            onKeyDown={e => e.key === 'Enter' && handleReply(post.id, c.id)}
+                                                                            autoFocus
+                                                                        />
+                                                                        <button
+                                                                            className="btn btn-primary"
+                                                                            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                                                                            onClick={() => handleReply(post.id, c.id)}
+                                                                            disabled={!replyText[c.id]?.trim()}
+                                                                        >
+                                                                            <span className="material-icons-outlined" style={{ fontSize: '0.9rem' }}>send</span>
+                                                                        </button>
+                                                                        <button
+                                                                            className="btn btn-ghost"
+                                                                            style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                                                                            onClick={() => { setReplyingTo(null); setReplyText({ ...replyText, [c.id]: '' }); }}
+                                                                        >
+                                                                            İptal
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Nested replies */}
+                                                                {replies.length > 0 && (
+                                                                    <div style={{
+                                                                        marginTop: 10,
+                                                                        borderLeft: '2px solid var(--border)',
+                                                                        paddingLeft: 10,
+                                                                    }}>
+                                                                        {replies.map((r: any) => renderComment(r, true))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        )}
+                                                );
+                                            };
+
+                                            return (
+                                                <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+                                                    <div style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: 8, color: 'var(--text-tertiary)' }}>
+                                                        {post.comments.length} yorum
+                                                    </div>
+                                                    {topLevel.map((c: any) => renderComment(c, false))}
+                                                </div>
+                                            );
+                                        })()}
 
                                         {/* Add Comment */}
                                         <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
