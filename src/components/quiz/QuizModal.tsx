@@ -503,7 +503,13 @@ export default function QuizModal({ quizId, trainingTitle, onClose, onPassed, on
                         {/* Question */}
                         {currentQ && (
                             <div style={{ padding: '20px 24px', minHeight: 320 }}>
-                                <div style={{ fontSize: '1.05rem', fontWeight: 600, marginBottom: 20, lineHeight: 1.5 }}>
+                                <div style={{
+                                    fontSize: '1.1rem',
+                                    fontWeight: 600,
+                                    marginBottom: 20,
+                                    lineHeight: 1.5,
+                                    color: 'var(--text-primary)',
+                                }}>
                                     {currentQ.question}
                                 </div>
 
@@ -563,21 +569,54 @@ export default function QuizModal({ quizId, trainingTitle, onClose, onPassed, on
                                             return opts.map((opt, oi) => {
                                                 const selected = answers[currentQ.id] === opt;
                                                 return (
-                                                    <button key={oi} onClick={() => setAnswers({ ...answers, [currentQ.id]: opt })} style={{
-                                                        textAlign: 'left', padding: '14px 16px', borderRadius: 12,
-                                                        border: selected ? '2px solid #e53935' : '2px solid var(--border)',
-                                                        background: selected ? 'rgba(229,57,53,0.1)' : 'var(--bg-tertiary)',
-                                                        display: 'flex', alignItems: 'center', gap: 12,
-                                                        cursor: 'pointer', transition: 'all 0.25s',
-                                                    }}>
+                                                    <button
+                                                        key={oi}
+                                                        onClick={() => setAnswers({ ...answers, [currentQ.id]: opt })}
+                                                        style={{
+                                                            textAlign: 'left',
+                                                            padding: '14px 16px',
+                                                            borderRadius: 12,
+                                                            border: selected ? '2px solid #e53935' : '2px solid var(--border)',
+                                                            background: selected ? 'rgba(229,57,53,0.15)' : 'var(--card-bg)',
+                                                            color: 'var(--text-primary)',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: 12,
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s ease',
+                                                            boxShadow: selected ? '0 4px 14px rgba(229,57,53,0.25)' : 'none',
+                                                            transform: selected ? 'scale(1.01)' : 'scale(1)',
+                                                        }}
+                                                        onMouseEnter={e => {
+                                                            if (!selected) {
+                                                                e.currentTarget.style.borderColor = '#e53935';
+                                                                e.currentTarget.style.background = 'rgba(229,57,53,0.08)';
+                                                            }
+                                                        }}
+                                                        onMouseLeave={e => {
+                                                            if (!selected) {
+                                                                e.currentTarget.style.borderColor = 'var(--border)';
+                                                                e.currentTarget.style.background = 'var(--card-bg)';
+                                                            }
+                                                        }}
+                                                    >
                                                         <span style={{
                                                             width: 32, height: 32, borderRadius: '50%',
                                                             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                                                             background: selected ? '#e53935' : 'var(--bg-secondary)',
-                                                            color: selected ? '#fff' : 'var(--text-secondary)',
-                                                            fontWeight: 700, fontSize: '0.85rem', flexShrink: 0,
+                                                            color: selected ? '#fff' : 'var(--text-primary)',
+                                                            border: selected ? 'none' : '1px solid var(--border)',
+                                                            fontWeight: 700,
+                                                            fontSize: '0.88rem',
+                                                            flexShrink: 0,
+                                                            transition: 'all 0.2s ease',
                                                         }}>{String.fromCharCode(65 + oi)}</span>
-                                                        <span style={{ fontSize: '0.92rem' }}>{opt}</span>
+                                                        <span style={{
+                                                            fontSize: '0.95rem',
+                                                            color: 'var(--text-primary)',
+                                                            fontWeight: selected ? 600 : 500,
+                                                            lineHeight: 1.4,
+                                                        }}>{opt}</span>
                                                     </button>
                                                 );
                                             });
