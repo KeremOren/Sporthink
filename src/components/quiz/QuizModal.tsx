@@ -82,6 +82,17 @@ export default function QuizModal({ quizId, trainingTitle, onClose, onPassed, on
 
     const handleSubmit = async () => {
         if (!quiz) return;
+
+        // Eksik soru varsa kullanıcıyı uyar + onay al
+        const totalQ = quiz.questions.length;
+        const answeredQ = Object.keys(answers).filter(k => answers[k]).length;
+        if (answeredQ < totalQ) {
+            const missing = totalQ - answeredQ;
+            if (!confirm(`${missing} soru cevaplanmadı. Yine de sınavı bitirmek istiyor musun?\n\nCevaplamadığın sorular yanlış sayılır.`)) {
+                return;
+            }
+        }
+
         setSubmitting(true);
         try {
             const res = await fetch('/api/quizzes/submit', {
@@ -130,7 +141,10 @@ export default function QuizModal({ quizId, trainingTitle, onClose, onPassed, on
     const progress = total > 0 ? Math.round(((currentIdx + 1) / total) * 100) : 0;
 
     return (
-        <div className="modal-overlay" style={{ alignItems: 'flex-start', padding: '5vh 16px', overflowY: 'auto' }}>
+        <div className="modal-overlay" style={{
+            alignItems: 'flex-start', padding: '5vh 16px', overflowY: 'auto',
+            background: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(8px)',
+        }}>
             <div
                 className="modal"
                 onClick={e => e.stopPropagation()}
@@ -139,6 +153,8 @@ export default function QuizModal({ quizId, trainingTitle, onClose, onPassed, on
                     maxHeight: '90vh', display: 'flex', flexDirection: 'column',
                     overflow: 'hidden',
                     animation: 'cine-scaleIn 0.4s cubic-bezier(0.22,1,0.36,1) both',
+                    border: '1px solid var(--card-border)',
+                    boxShadow: '0 40px 100px rgba(0, 0, 0, 0.5)',
                 }}
             >
                 {/* Red Header */}
@@ -497,14 +513,45 @@ export default function QuizModal({ quizId, trainingTitle, onClose, onPassed, on
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                         {['Doğru', 'Yanlış'].map(opt => {
                                             const selected = answers[currentQ.id] === opt;
+                                            const color = opt === 'Doğru' ? '#22c55e' : '#ef4444';
+                                            const icon = opt === 'Doğru' ? 'check_circle' : 'cancel';
                                             return (
-                                                <button key={opt} onClick={() => setAnswers({ ...answers, [currentQ.id]: opt })} style={{
-                                                    padding: 16, borderRadius: 12,
-                                                    border: selected ? `2px solid ${opt === 'Doğru' ? '#22c55e' : '#ef4444'}` : '2px solid var(--border)',
-                                                    background: selected ? (opt === 'Doğru' ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)') : 'var(--bg-tertiary)',
-                                                    cursor: 'pointer', fontWeight: 600,
-                                                    color: selected ? (opt === 'Doğru' ? '#16a34a' : '#dc2626') : 'var(--text-primary)',
-                                                }}>{opt}</button>
+                                                <button
+                                                    key={opt}
+                                                    onClick={() => setAnswers({ ...answers, [currentQ.id]: opt })}
+                                                    style={{
+                                                        padding: '18px 16px',
+                                                        borderRadius: 14,
+                                                        border: selected ? `2px solid ${color}` : '2px solid var(--border)',
+                                                        background: selected ? `${color}22` : 'var(--card-bg)',
+                                                        cursor: 'pointer',
+                                                        fontWeight: 700,
+                                                        fontSize: '1rem',
+                                                        color: selected ? color : 'var(--text-primary)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: 8,
+                                                        boxShadow: selected ? `0 4px 14px ${color}33` : 'none',
+                                                        transform: selected ? 'scale(1.02)' : 'scale(1)',
+                                                        transition: 'all 0.2s ease',
+                                                    }}
+                                                    onMouseEnter={e => {
+                                                        if (!selected) {
+                                                            e.currentTarget.style.borderColor = color;
+                                                            e.currentTarget.style.background = `${color}11`;
+                                                        }
+                                                    }}
+                                                    onMouseLeave={e => {
+                                                        if (!selected) {
+                                                            e.currentTarget.style.borderColor = 'var(--border)';
+                                                            e.currentTarget.style.background = 'var(--card-bg)';
+                                                        }
+                                                    }}
+                                                >
+                                                    <span className="material-icons-outlined" style={{ fontSize: '1.25rem', color: selected ? color : 'var(--text-tertiary)' }}>{icon}</span>
+                                                    {opt}
+                                                </button>
                                             );
                                         })}
                                     </div>
@@ -541,17 +588,76 @@ export default function QuizModal({ quizId, trainingTitle, onClose, onPassed, on
                         )}
 
                         {/* Footer */}
-                        <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', gap: 12, background: 'var(--bg-secondary)' }}>
+                        <div style={{
+                            padding: '14px 24px',
+                            borderTop: '1px solid var(--border)',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
+                            background: 'var(--bg-secondary)',
+                        }}>
                             <button className="btn btn-ghost" disabled={currentIdx === 0} onClick={() => setCurrentIdx(i => i - 1)}>
                                 <span className="material-icons-outlined">arrow_back</span> Önceki
                             </button>
+
+                            {/* Cevaplanan sayacı */}
+                            <div style={{
+                                fontSize: '0.78rem',
+                                color: allAnswered ? '#16a34a' : 'var(--text-tertiary)',
+                                fontWeight: 600,
+                                display: 'flex', alignItems: 'center', gap: 4,
+                            }}>
+                                <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>
+                                    {allAnswered ? 'check_circle' : 'pending'}
+                                </span>
+                                {answered}/{total} cevaplandı
+                            </div>
+
                             {currentIdx < total - 1 ? (
                                 <button className="btn btn-primary" onClick={() => setCurrentIdx(i => i + 1)}>
                                     Sonraki <span className="material-icons-outlined">arrow_forward</span>
                                 </button>
                             ) : (
-                                <button className="btn btn-primary" onClick={handleSubmit} disabled={!allAnswered || submitting}>
-                                    {submitting ? (<><div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Gönderiliyor...</>) : (<><span className="material-icons-outlined">send</span> Sınavı Bitir</>)}
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={submitting}
+                                    style={{
+                                        padding: '10px 20px',
+                                        background: submitting
+                                            ? 'rgba(229,57,53,0.5)'
+                                            : allAnswered
+                                                ? 'linear-gradient(135deg, #22c55e, #16a34a)'
+                                                : 'linear-gradient(135deg, #e53935, #c62828)',
+                                        color: '#fff',
+                                        border: 'none',
+                                        borderRadius: 10,
+                                        fontSize: '0.88rem',
+                                        fontWeight: 700,
+                                        cursor: submitting ? 'not-allowed' : 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 8,
+                                        boxShadow: allAnswered
+                                            ? '0 4px 14px rgba(34,197,94,0.4)'
+                                            : '0 4px 14px rgba(229,57,53,0.4)',
+                                        transition: 'all 0.2s ease',
+                                    }}
+                                    title={!allAnswered ? `${total - answered} soru cevaplanmadı — yine de bitirebilirsin` : 'Sınavı tamamla'}
+                                    onMouseEnter={e => {
+                                        if (!submitting) {
+                                            e.currentTarget.style.transform = 'translateY(-1px)';
+                                        }
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                    }}
+                                >
+                                    {submitting ? (
+                                        <><div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Gönderiliyor...</>
+                                    ) : (
+                                        <>
+                                            <span className="material-icons-outlined" style={{ fontSize: '1.1rem' }}>send</span>
+                                            Sınavı Bitir
+                                        </>
+                                    )}
                                 </button>
                             )}
                         </div>
