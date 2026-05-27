@@ -446,8 +446,8 @@ export default function SimulationsPage() {
                         onClick={() => !clearing && setConfirmClear(false)}
                         style={{
                             position: 'fixed', inset: 0, zIndex: 1000,
-                            background: 'rgba(0,0,0,0.5)',
-                            backdropFilter: 'blur(4px)',
+                            background: 'rgba(0,0,0,0.6)',
+                            backdropFilter: 'blur(8px)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             padding: 20,
                         }}
@@ -455,45 +455,88 @@ export default function SimulationsPage() {
                         <div
                             onClick={(e) => e.stopPropagation()}
                             style={{
-                                background: 'var(--card-bg)',
-                                borderRadius: 16,
-                                padding: 24,
-                                maxWidth: 420,
+                                background: '#ffffff',
+                                color: '#1f2937',
+                                borderRadius: 20,
+                                padding: 0,
+                                maxWidth: 460,
                                 width: '100%',
-                                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-                                border: '1px solid var(--card-border)',
+                                boxShadow: '0 30px 80px rgba(0,0,0,0.5)',
+                                overflow: 'hidden',
                             }}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+                            {/* Kırmızı gradient header */}
+                            <div style={{
+                                padding: '20px 24px',
+                                background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                                color: '#fff',
+                                display: 'flex', alignItems: 'center', gap: 14,
+                            }}>
                                 <div style={{
-                                    width: 44, height: 44, borderRadius: 12,
-                                    background: 'rgba(239,68,68,0.12)',
+                                    width: 46, height: 46, borderRadius: 12,
+                                    background: 'rgba(255,255,255,0.22)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    color: '#ef4444',
+                                    flexShrink: 0,
                                 }}>
-                                    <span className="material-icons-outlined" style={{ fontSize: '1.4rem' }}>warning</span>
+                                    <span className="material-icons-outlined" style={{ fontSize: '1.5rem' }}>warning</span>
                                 </div>
-                                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, lineHeight: 1.3 }}>
                                     Geçmişi temizlemek istediğine emin misin?
                                 </h3>
                             </div>
-                            <p style={{ margin: '0 0 18px', fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                                Tüm simülasyon denemen <strong>({data?.recent.length || 0} kayıt)</strong> kalıcı olarak silinecek.
-                                Kazandığın <strong style={{ color: '#f59e0b' }}>{data?.stats.totalXP || 0} XP</strong> ve rozetler de geri alınacak.
-                                Bu işlem <strong>geri alınamaz</strong>.
-                            </p>
-                            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+
+                            {/* Body */}
+                            <div style={{ padding: 24 }}>
+                                <p style={{ margin: '0 0 14px', fontSize: '0.9rem', color: '#374151', lineHeight: 1.6 }}>
+                                    Tüm simülasyon denemen <strong style={{ color: '#1f2937' }}>({data?.recent.length || 0} kayıt)</strong> kalıcı olarak silinecek.
+                                </p>
+                                <div style={{
+                                    padding: '10px 14px',
+                                    background: '#fef3c7',
+                                    border: '1px solid #fde68a',
+                                    borderRadius: 10,
+                                    fontSize: '0.85rem',
+                                    color: '#78350f',
+                                    marginBottom: 6,
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                }}>
+                                    <span className="material-icons-outlined" style={{ fontSize: '1.1rem', color: '#d97706' }}>stars</span>
+                                    Kazandığın <strong>{data?.stats.totalXP || 0} XP</strong> ve rozetler geri alınacak.
+                                </div>
+                                <p style={{ margin: '12px 0 0', fontSize: '0.82rem', color: '#dc2626', fontWeight: 700 }}>
+                                    ⚠️ Bu işlem geri alınamaz!
+                                </p>
+                            </div>
+
+                            {/* Footer / Buttons */}
+                            <div style={{
+                                padding: '14px 20px',
+                                background: '#f8fafc',
+                                borderTop: '1px solid #e2e8f0',
+                                display: 'flex', gap: 8, justifyContent: 'flex-end',
+                            }}>
                                 <button
                                     onClick={() => setConfirmClear(false)}
                                     disabled={clearing}
                                     style={{
-                                        padding: '9px 16px',
-                                        background: 'transparent',
-                                        color: 'var(--text-secondary)',
-                                        border: '1px solid var(--card-border)',
+                                        padding: '9px 18px',
+                                        background: '#ffffff',
+                                        color: '#374151',
+                                        border: '1px solid #d1d5db',
                                         borderRadius: 8,
                                         fontSize: '0.85rem', fontWeight: 600,
                                         cursor: clearing ? 'not-allowed' : 'pointer',
+                                        transition: 'all 0.2s ease',
+                                    }}
+                                    onMouseEnter={e => {
+                                        if (!clearing) {
+                                            e.currentTarget.style.background = '#f3f4f6';
+                                            e.currentTarget.style.borderColor = '#9ca3af';
+                                        }
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.background = '#ffffff';
+                                        e.currentTarget.style.borderColor = '#d1d5db';
                                     }}
                                 >
                                     İptal
@@ -502,7 +545,7 @@ export default function SimulationsPage() {
                                     onClick={handleClearAll}
                                     disabled={clearing}
                                     style={{
-                                        padding: '9px 16px',
+                                        padding: '9px 18px',
                                         background: 'linear-gradient(135deg, #ef4444, #dc2626)',
                                         color: '#fff',
                                         border: 'none',
@@ -510,11 +553,22 @@ export default function SimulationsPage() {
                                         fontSize: '0.85rem', fontWeight: 700,
                                         cursor: clearing ? 'not-allowed' : 'pointer',
                                         display: 'inline-flex', alignItems: 'center', gap: 6,
-                                        boxShadow: '0 4px 12px rgba(239,68,68,0.35)',
+                                        boxShadow: '0 4px 12px rgba(239,68,68,0.4)',
                                         opacity: clearing ? 0.7 : 1,
+                                        transition: 'all 0.2s ease',
+                                    }}
+                                    onMouseEnter={e => {
+                                        if (!clearing) {
+                                            e.currentTarget.style.transform = 'translateY(-1px)';
+                                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(239,68,68,0.5)';
+                                        }
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.transform = 'translateY(0)';
+                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(239,68,68,0.4)';
                                     }}
                                 >
-                                    <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>delete_sweep</span>
+                                    <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>delete_sweep</span>
                                     {clearing ? 'Siliniyor...' : 'Evet, Hepsini Sil'}
                                 </button>
                             </div>
