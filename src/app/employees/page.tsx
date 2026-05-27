@@ -41,16 +41,22 @@ export default function EmployeesPage() {
         if (!noteText.trim() || !selectedUser) return;
         setSendingNote(true);
         try {
-            await fetch(`/api/users/${selectedUser}/notes`, {
+            const noteRes = await fetch(`/api/users/${selectedUser}/notes`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ content: noteText, type: 'GENERAL' }),
             });
+            if (!noteRes.ok) {
+                const data = await noteRes.json().catch(() => ({}));
+                showToast(data?.error || 'Not eklenemedi', 'error');
+                setSendingNote(false);
+                return;
+            }
             setNoteText('');
             showToast('Not başarıyla eklendi', 'success');
             // Refresh profile
             const res = await fetch(`/api/users/${selectedUser}`);
-            setProfileData(await res.json());
+            if (res.ok) setProfileData(await res.json());
         } catch {
             showToast('Not eklenirken hata oluştu', 'error');
         }

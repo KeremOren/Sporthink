@@ -42,27 +42,45 @@ export default function FeedbackPage() {
     useEffect(() => { if (session) fetchFeedback(); }, [typeFilter]);
 
     const handleCreate = async () => {
-        await fetch('/api/feedback', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(form),
-        });
-        setShowCreate(false);
-        setForm({ title: '', description: '', type: 'OPERATIONAL_ISSUE', priority: 'MEDIUM' });
-        showToast('Geri bildirim başarıyla oluşturuldu', 'success');
-        addNotification({ title: 'Yeni Geri Bildirim', message: `"${form.title}" başarıyla oluşturuldu.`, type: 'feedback', link: '/feedback' });
-        fetchFeedback();
+        try {
+            const res = await fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form),
+            });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'Geri bildirim oluşturulamadı', 'error');
+                return;
+            }
+            setShowCreate(false);
+            setForm({ title: '', description: '', type: 'OPERATIONAL_ISSUE', priority: 'MEDIUM' });
+            showToast('Geri bildirim başarıyla oluşturuldu', 'success');
+            addNotification({ title: 'Yeni Geri Bildirim', message: `"${form.title}" başarıyla oluşturuldu.`, type: 'feedback', link: '/feedback' });
+            fetchFeedback();
+        } catch {
+            showToast('Geri bildirim oluşturulurken hata oluştu', 'error');
+        }
     };
 
     const updateStatus = async (id: string, newStatus: string) => {
-        await fetch('/api/feedback', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, status: newStatus }),
-        });
-        showToast(`Durum güncellendi: ${getStatusLabel(newStatus)}`, 'success');
-        addNotification({ title: 'Durum Değişikliği', message: `Geri bildirim durumu "${getStatusLabel(newStatus)}" olarak güncellendi.`, type: 'info', link: '/feedback' });
-        fetchFeedback();
+        try {
+            const res = await fetch('/api/feedback', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status: newStatus }),
+            });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'Durum güncellenemedi', 'error');
+                return;
+            }
+            showToast(`Durum güncellendi: ${getStatusLabel(newStatus)}`, 'success');
+            addNotification({ title: 'Durum Değişikliği', message: `Geri bildirim durumu "${getStatusLabel(newStatus)}" olarak güncellendi.`, type: 'info', link: '/feedback' });
+            fetchFeedback();
+        } catch {
+            showToast('Durum güncellenirken hata oluştu', 'error');
+        }
     };
 
     const openDetail = async (fb: any) => {
@@ -70,6 +88,7 @@ export default function FeedbackPage() {
         setLoadingDetail(true);
         try {
             const res = await fetch(`/api/feedback/${fb.id}`);
+            if (!res.ok) { setDetail(null); return; }
             setDetail(await res.json());
         } catch { setDetail(null); }
         setLoadingDetail(false);
@@ -79,15 +98,21 @@ export default function FeedbackPage() {
         if (!commentText.trim() || !selectedFb) return;
         setSendingComment(true);
         try {
-            await fetch(`/api/feedback/${selectedFb.id}`, {
+            const postRes = await fetch(`/api/feedback/${selectedFb.id}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ comment: commentText }),
             });
+            if (!postRes.ok) {
+                const data = await postRes.json().catch(() => ({}));
+                showToast(data?.error || 'Yorum eklenemedi', 'error');
+                setSendingComment(false);
+                return;
+            }
             setCommentText('');
             // Refresh detail
             const res = await fetch(`/api/feedback/${selectedFb.id}`);
-            setDetail(await res.json());
+            if (res.ok) setDetail(await res.json());
             showToast('Yorum eklendi', 'success');
         } catch {
             showToast('Yorum eklenirken hata oluştu', 'error');

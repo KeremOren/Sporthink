@@ -68,11 +68,16 @@ export default function TrainingsPage() {
 
     const handleCreate = async () => {
         try {
-            await fetch('/api/trainings', {
+            const res = await fetch('/api/trainings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form),
             });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'Eğitim oluşturulamadı', 'error');
+                return;
+            }
             setShowCreate(false);
             setForm({ title: '', description: '', category: 'Güvenlik', type: 'MANDATORY', durationMinutes: '', minPassRate: '70' });
             showToast('Eğitim başarıyla oluşturuldu', 'success');

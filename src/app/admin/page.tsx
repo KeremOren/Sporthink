@@ -82,11 +82,16 @@ export default function AdminPage() {
 
     const toggleActive = async (userId: string, currentStatus: boolean) => {
         try {
-            await fetch('/api/users', {
+            const res = await fetch('/api/users', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: userId, isActive: !currentStatus }),
             });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'İşlem başarısız', 'error');
+                return;
+            }
             showToast(currentStatus ? 'Kullanıcı deaktif edildi' : 'Kullanıcı aktif edildi', 'success');
             loadData();
         } catch {

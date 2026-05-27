@@ -62,14 +62,20 @@ export default function TrainingDetailPage() {
         if (selectedUsers.length === 0) return;
         setAssigning(true);
         try {
+            let failed = 0;
             for (const userId of selectedUsers) {
-                await fetch('/api/trainings/assignments', {
+                const res = await fetch('/api/trainings/assignments', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ trainingId: params.id, userId }),
                 });
+                if (!res.ok) failed++;
             }
-            showToast(`${selectedUsers.length} çalışana eğitim atandı`, 'success');
+            if (failed > 0) {
+                showToast(`${selectedUsers.length - failed}/${selectedUsers.length} atama yapıldı, ${failed} hata`, 'warning');
+            } else {
+                showToast(`${selectedUsers.length} çalışana eğitim atandı`, 'success');
+            }
             setAssignModal(false);
             setSelectedUsers([]);
             setModalSearch('');
@@ -84,11 +90,16 @@ export default function TrainingDetailPage() {
         const assignment = training?.assignments?.find((a: any) => a.userId === user?.id);
         if (!assignment) return;
         try {
-            await fetch('/api/trainings/assignments', {
+            const res = await fetch('/api/trainings/assignments', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ assignmentId: assignment.id, status: 'COMPLETED' }),
             });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'İşlem başarısız', 'error');
+                return;
+            }
             showToast('Eğitim tamamlandı olarak işaretlendi!', 'success');
             await refreshTraining();
         } catch {
@@ -100,11 +111,17 @@ export default function TrainingDetailPage() {
         if (!contentForm.title || !contentForm.type) return;
         setAddingContent(true);
         try {
-            await fetch(`/api/trainings/${params.id}/contents`, {
+            const res = await fetch(`/api/trainings/${params.id}/contents`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(contentForm),
             });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'İçerik eklenemedi', 'error');
+                setAddingContent(false);
+                return;
+            }
             showToast('İçerik adımı eklendi', 'success');
             setContentModal(false);
             setContentForm({ type: 'TEXT', title: '', content: '' });
@@ -118,7 +135,12 @@ export default function TrainingDetailPage() {
     const handleDeleteContent = async (contentId: string) => {
         if (!confirm('Bu içerik adımını silmek istediğinizden emin misiniz?')) return;
         try {
-            await fetch(`/api/trainings/${params.id}/contents?contentId=${contentId}`, { method: 'DELETE' });
+            const res = await fetch(`/api/trainings/${params.id}/contents?contentId=${contentId}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'Silme başarısız', 'error');
+                return;
+            }
             showToast('İçerik adımı silindi', 'success');
             setActiveStep(0);
             await refreshTraining();

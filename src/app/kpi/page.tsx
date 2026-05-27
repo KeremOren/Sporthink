@@ -41,11 +41,16 @@ export default function KpiPage() {
 
     const handleAddEntry = async () => {
         try {
-            await fetch('/api/kpi', {
+            const res = await fetch('/api/kpi', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form),
             });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'KPI verisi kaydedilemedi', 'error');
+                return;
+            }
             setShowAdd(false);
             setForm({ kpiDefinitionId: '', value: '', period: '', storeId: '', notes: '' });
             showToast('KPI verisi başarıyla kaydedildi', 'success');
