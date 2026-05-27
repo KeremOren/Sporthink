@@ -202,14 +202,38 @@ export default function CommunityPage() {
                                                                             onClick={() => handleDeleteComment(c.id)}
                                                                             title="Yorumu sil"
                                                                             style={{
-                                                                                background: 'transparent', border: 'none', cursor: 'pointer',
-                                                                                color: '#ef4444', padding: 2, display: 'inline-flex',
-                                                                                alignItems: 'center', marginLeft: 'auto', opacity: 0.65,
+                                                                                background: 'rgba(239, 68, 68, 0.08)',
+                                                                                border: '1px solid rgba(239, 68, 68, 0.18)',
+                                                                                color: '#ef4444',
+                                                                                cursor: 'pointer',
+                                                                                padding: '4px 8px',
+                                                                                borderRadius: 8,
+                                                                                display: 'inline-flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                marginLeft: 'auto',
+                                                                                fontSize: '0.7rem',
+                                                                                fontWeight: 600,
+                                                                                gap: 3,
+                                                                                transition: 'all 0.2s ease',
                                                                             }}
-                                                                            onMouseEnter={e => { e.currentTarget.style.opacity = '1'; }}
-                                                                            onMouseLeave={e => { e.currentTarget.style.opacity = '0.65'; }}
+                                                                            onMouseEnter={e => {
+                                                                                e.currentTarget.style.background = '#ef4444';
+                                                                                e.currentTarget.style.color = '#fff';
+                                                                                e.currentTarget.style.borderColor = '#ef4444';
+                                                                                e.currentTarget.style.transform = 'translateY(-1px)';
+                                                                                e.currentTarget.style.boxShadow = '0 3px 10px rgba(239,68,68,0.35)';
+                                                                            }}
+                                                                            onMouseLeave={e => {
+                                                                                e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)';
+                                                                                e.currentTarget.style.color = '#ef4444';
+                                                                                e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.18)';
+                                                                                e.currentTarget.style.transform = 'translateY(0)';
+                                                                                e.currentTarget.style.boxShadow = 'none';
+                                                                            }}
                                                                         >
-                                                                            <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>delete</span>
+                                                                            <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>delete_outline</span>
+                                                                            Sil
                                                                         </button>
                                                                     )}
                                                                 </div>
@@ -218,20 +242,54 @@ export default function CommunityPage() {
                                                                     <button
                                                                         onClick={() => setReplyingTo(replyingTo === c.id ? null : c.id)}
                                                                         style={{
-                                                                            background: 'transparent', border: 'none', cursor: 'pointer',
-                                                                            color: 'var(--primary)', fontSize: '0.72rem', fontWeight: 600,
-                                                                            padding: '2px 0', marginTop: 4, display: 'inline-flex',
-                                                                            alignItems: 'center', gap: 3,
+                                                                            background: replyingTo === c.id ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.06)',
+                                                                            border: '1px solid rgba(99, 102, 241, 0.22)',
+                                                                            cursor: 'pointer',
+                                                                            color: '#6366f1',
+                                                                            fontSize: '0.72rem',
+                                                                            fontWeight: 600,
+                                                                            padding: '4px 10px',
+                                                                            marginTop: 8,
+                                                                            borderRadius: 999,
+                                                                            display: 'inline-flex',
+                                                                            alignItems: 'center',
+                                                                            gap: 4,
+                                                                            transition: 'all 0.2s ease',
+                                                                        }}
+                                                                        onMouseEnter={e => {
+                                                                            e.currentTarget.style.background = '#6366f1';
+                                                                            e.currentTarget.style.color = '#fff';
+                                                                            e.currentTarget.style.borderColor = '#6366f1';
+                                                                            e.currentTarget.style.transform = 'translateY(-1px)';
+                                                                            e.currentTarget.style.boxShadow = '0 3px 10px rgba(99,102,241,0.35)';
+                                                                        }}
+                                                                        onMouseLeave={e => {
+                                                                            const active = replyingTo === c.id;
+                                                                            e.currentTarget.style.background = active ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.06)';
+                                                                            e.currentTarget.style.color = '#6366f1';
+                                                                            e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.22)';
+                                                                            e.currentTarget.style.transform = 'translateY(0)';
+                                                                            e.currentTarget.style.boxShadow = 'none';
                                                                         }}
                                                                     >
-                                                                        <span className="material-icons-outlined" style={{ fontSize: '0.85rem' }}>reply</span>
-                                                                        Yanıtla
+                                                                        <span className="material-icons-outlined" style={{ fontSize: '0.9rem' }}>
+                                                                            {replyingTo === c.id ? 'close' : 'reply'}
+                                                                        </span>
+                                                                        {replyingTo === c.id ? 'İptal' : 'Yanıtla'}
                                                                     </button>
                                                                 )}
 
                                                                 {/* Reply input */}
                                                                 {replyingTo === c.id && (
-                                                                    <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                                                                    <div style={{
+                                                                        display: 'flex',
+                                                                        gap: 6,
+                                                                        marginTop: 8,
+                                                                        padding: 8,
+                                                                        background: 'rgba(99, 102, 241, 0.04)',
+                                                                        border: '1px solid rgba(99, 102, 241, 0.15)',
+                                                                        borderRadius: 10,
+                                                                    }}>
                                                                         <input
                                                                             className="form-input"
                                                                             style={{ flex: 1, fontSize: '0.78rem', padding: '6px 10px' }}
@@ -242,19 +300,28 @@ export default function CommunityPage() {
                                                                             autoFocus
                                                                         />
                                                                         <button
-                                                                            className="btn btn-primary"
-                                                                            style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                                                                             onClick={() => handleReply(post.id, c.id)}
                                                                             disabled={!replyText[c.id]?.trim()}
+                                                                            style={{
+                                                                                padding: '4px 14px',
+                                                                                background: !replyText[c.id]?.trim()
+                                                                                    ? 'rgba(99, 102, 241, 0.3)'
+                                                                                    : 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                                                                                color: '#fff',
+                                                                                border: 'none',
+                                                                                borderRadius: 8,
+                                                                                cursor: !replyText[c.id]?.trim() ? 'not-allowed' : 'pointer',
+                                                                                fontSize: '0.75rem',
+                                                                                fontWeight: 600,
+                                                                                display: 'inline-flex',
+                                                                                alignItems: 'center',
+                                                                                gap: 4,
+                                                                                boxShadow: !replyText[c.id]?.trim() ? 'none' : '0 2px 8px rgba(99,102,241,0.3)',
+                                                                                transition: 'all 0.2s ease',
+                                                                            }}
                                                                         >
-                                                                            <span className="material-icons-outlined" style={{ fontSize: '0.9rem' }}>send</span>
-                                                                        </button>
-                                                                        <button
-                                                                            className="btn btn-ghost"
-                                                                            style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                                                                            onClick={() => { setReplyingTo(null); setReplyText({ ...replyText, [c.id]: '' }); }}
-                                                                        >
-                                                                            İptal
+                                                                            <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>send</span>
+                                                                            Gönder
                                                                         </button>
                                                                     </div>
                                                                 )}
