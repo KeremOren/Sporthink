@@ -36,9 +36,12 @@ type SubmitResult = {
     passed: boolean;
     totalQuestions: number;
     correctAnswers: number;
+    wrongAnswers?: number;
+    blankAnswers?: number;
     remainingAttempts: number;
     autoRetry?: boolean;
     autoRetryMessage?: string | null;
+    attemptsExhausted?: boolean;
     breakdown?: BreakdownItem[];
 };
 
@@ -100,14 +103,20 @@ export default function QuizModal({ quizId, trainingTitle, onClose, onPassed, on
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ quizId: quiz.id, answers }),
             });
-            const data: SubmitResult = await res.json();
-            setResult(data);
-            if (data.passed) {
+            const data = await res.json();
+            if (!res.ok) {
+                showToast(data?.error || 'Sınav gönderilemedi', 'error');
+                return;
+            }
+            const result = data as SubmitResult;
+            setResult(result);
+            if (result.attemptsExhausted) {
+                // sessizce göster — toast yok, kullanıcı sonucu modal'da görsün
+            } else if (result.passed) {
                 showToast('Tebrikler! Sınavı geçtiniz', 'success');
-                onPassed?.(data);
+                onPassed?.(result);
             } else {
-                showToast('Geçer not alınamadı', 'warning');
-                onFailed?.(data);
+                onFailed?.(result);
             }
         } catch {
             showToast('Sınav gönderilirken hata oluştu', 'error');
@@ -202,18 +211,23 @@ export default function QuizModal({ quizId, trainingTitle, onClose, onPassed, on
                                 {/* Stats row */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18, flexWrap: 'wrap' }}>
                                     <div>
-                                        <div style={{ fontSize: '2rem', fontWeight: 800, color: passColor, lineHeight: 1 }}>{result.correctAnswers}</div>
-                                        <div style={{ fontSize: '0.72rem', color: passColor, marginTop: 4 }}>Doğru</div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 800, color: '#16a34a', lineHeight: 1 }}>{result.correctAnswers ?? 0}</div>
+                                        <div style={{ fontSize: '0.72rem', color: '#16a34a', marginTop: 4, fontWeight: 700 }}>Doğru</div>
                                     </div>
-                                    <span style={{ color: passColor, fontSize: '1.6rem', fontWeight: 300 }}>/</span>
+                                    <span style={{ color: passColor, fontSize: '1.6rem', fontWeight: 300, opacity: 0.5 }}>•</span>
                                     <div>
-                                        <div style={{ fontSize: '2rem', fontWeight: 800, color: passColor, lineHeight: 1 }}>{result.totalQuestions}</div>
-                                        <div style={{ fontSize: '0.72rem', color: passColor, marginTop: 4 }}>Toplam</div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 800, color: '#dc2626', lineHeight: 1 }}>{result.wrongAnswers ?? Math.max(0, (result.totalQuestions ?? 0) - (result.correctAnswers ?? 0) - (result.blankAnswers ?? 0))}</div>
+                                        <div style={{ fontSize: '0.72rem', color: '#dc2626', marginTop: 4, fontWeight: 700 }}>Yanlış</div>
                                     </div>
-                                    <span style={{ color: passColor, fontSize: '1.6rem', fontWeight: 300 }}>•</span>
+                                    <span style={{ color: passColor, fontSize: '1.6rem', fontWeight: 300, opacity: 0.5 }}>•</span>
                                     <div>
-                                        <div style={{ fontSize: '2rem', fontWeight: 800, color: passColor, lineHeight: 1 }}>%{result.score}</div>
-                                        <div style={{ fontSize: '0.72rem', color: passColor, marginTop: 4 }}>Başarı</div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 800, color: '#94a3b8', lineHeight: 1 }}>{result.blankAnswers ?? 0}</div>
+                                        <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: 4, fontWeight: 700 }}>Boş</div>
+                                    </div>
+                                    <span style={{ color: passColor, fontSize: '1.6rem', fontWeight: 300, opacity: 0.5 }}>•</span>
+                                    <div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 800, color: passColor, lineHeight: 1 }}>%{result.score ?? 0}</div>
+                                        <div style={{ fontSize: '0.72rem', color: passColor, marginTop: 4, fontWeight: 700 }}>Başarı</div>
                                     </div>
                                 </div>
                             </div>

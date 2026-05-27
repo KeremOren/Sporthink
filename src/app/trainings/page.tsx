@@ -337,30 +337,33 @@ export default function TrainingsPage() {
                                                     <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>{isCompleted ? 'visibility' : 'visibility'}</span>
                                                     {isCompleted ? 'Tekrar Görüntüle' : isInProgress ? 'Devam Et' : 'Görüntüle'}
                                                 </button>
-                                                {t.quiz && (
-                                                    <button
-                                                        onClick={() => {
-                                                            if (isCompleted) {
-                                                                router.push(`/trainings/${t.id}?quiz=1`);
-                                                            } else {
-                                                                showToast('Sınava başlamadan önce tüm bölümleri okumalısınız', 'error');
-                                                                router.push(`/trainings/${t.id}`);
-                                                            }
-                                                        }}
-                                                        title={isCompleted ? 'Sınava başla' : 'Tüm bölümleri okuduktan sonra sınava girebilirsin'}
-                                                        style={{
-                                                            padding: '10px 14px', borderRadius: 10,
-                                                            background: isCompleted ? 'rgba(229,57,53,0.12)' : 'rgba(148,163,184,0.12)',
-                                                            border: isCompleted ? '1px solid rgba(229,57,53,0.3)' : '1px solid rgba(148,163,184,0.3)',
-                                                            color: isCompleted ? '#E53935' : '#94a3b8',
-                                                            fontSize: '0.78rem', fontWeight: 700,
-                                                            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
-                                                        }}
-                                                    >
-                                                        <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>{isCompleted ? 'quiz' : 'lock'}</span>
-                                                        Quiz
-                                                    </button>
-                                                )}
+                                                {t.quiz && (() => {
+                                                    const quizUnlocked = isCompleted || isInProgress;
+                                                    return (
+                                                        <button
+                                                            onClick={() => {
+                                                                if (quizUnlocked) {
+                                                                    router.push(`/trainings/${t.id}?quiz=1`);
+                                                                } else {
+                                                                    showToast('Önce eğitimi başlat ve bölümleri oku', 'error');
+                                                                    router.push(`/trainings/${t.id}`);
+                                                                }
+                                                            }}
+                                                            title={quizUnlocked ? 'Sınava başla' : 'Eğitimi başlattıktan sonra sınava girebilirsin'}
+                                                            style={{
+                                                                padding: '10px 14px', borderRadius: 10,
+                                                                background: quizUnlocked ? 'rgba(229,57,53,0.12)' : 'rgba(148,163,184,0.12)',
+                                                                border: quizUnlocked ? '1px solid rgba(229,57,53,0.3)' : '1px solid rgba(148,163,184,0.3)',
+                                                                color: quizUnlocked ? '#E53935' : '#94a3b8',
+                                                                fontSize: '0.78rem', fontWeight: 700,
+                                                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                                                            }}
+                                                        >
+                                                            <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>{quizUnlocked ? 'quiz' : 'lock'}</span>
+                                                            Quiz
+                                                        </button>
+                                                    );
+                                                })()}
                                             </div>
                                         </div>
                                     );

@@ -24,23 +24,68 @@ export async function POST(req: Request) {
     });
 
     if (previousAttempts >= quiz.maxAttempts) {
+        // Return last attempt's result so UI can render proper stats instead of NaN
+        const lastAttempt = await prisma.quizAttempt.findFirst({
+            where: { quizId, userId: user.id },
+            orderBy: { completedAt: 'desc' },
+            include: { answers: true },
+        });
+        if (lastAttempt) {
+            const minPass = quiz.training?.minPassRate || 70;
+            const totalQ = quiz.questions.length;
+            const correctCount = lastAttempt.answers.filter(a => a.isCorrect).length;
+            const blankCount = lastAttempt.answers.filter(a => !a.answer || a.answer.trim() === '').length;
+            const wrongCount = totalQ - correctCount - blankCount;
+            const breakdown = quiz.questions.map((q, idx) => {
+                const ans = lastAttempt.answers.find(a => a.questionId === q.id);
+                const userAnswer = ans?.answer || '';
+                return {
+                    index: idx + 1,
+                    questionId: q.id,
+                    question: q.question,
+                    options: q.options,
+                    userAnswer,
+                    correctAnswer: q.correctAnswer,
+                    isCorrect: ans?.isCorrect ?? false,
+                    points: q.points,
+                };
+            });
+            return NextResponse.json({
+                attemptId: lastAttempt.id,
+                score: Math.round(lastAttempt.score || 0),
+                passScore: minPass,
+                passed: lastAttempt.passed || false,
+                totalQuestions: totalQ,
+                correctAnswers: correctCount,
+                wrongAnswers: wrongCount,
+                blankAnswers: blankCount,
+                remainingAttempts: 0,
+                attemptsExhausted: true,
+                autoRetryMessage: `Deneme hakkın doldu. Son denemende %${Math.round(lastAttempt.score || 0)} aldın.`,
+                breakdown,
+            });
+        }
         return NextResponse.json({ error: 'Deneme hakkı doldu' }, { status: 400 });
     }
 
     // Grade the quiz
     let correctCount = 0;
+    let blankCount = 0;
     const totalPoints = quiz.questions.reduce((sum, q) => sum + q.points, 0);
     let earnedPoints = 0;
 
     const graded = quiz.questions.map(q => {
         const userAnswer = answers[q.id] || '';
-        const isCorrect = userAnswer.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase();
+        const isBlank = !userAnswer || userAnswer.trim() === '';
+        const isCorrect = !isBlank && userAnswer.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase();
         if (isCorrect) {
             correctCount++;
             earnedPoints += q.points;
         }
+        if (isBlank) blankCount++;
         return { questionId: q.id, answer: userAnswer, isCorrect };
     });
+    const wrongCount = quiz.questions.length - correctCount - blankCount;
 
     const score = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
     const minPass = quiz.training?.minPassRate || 70;
@@ -141,6 +186,8 @@ export async function POST(req: Request) {
         passed,
         totalQuestions: quiz.questions.length,
         correctAnswers: correctCount,
+        wrongAnswers: wrongCount,
+        blankAnswers: blankCount,
         remainingAttempts: quiz.maxAttempts - previousAttempts - 1,
         autoRetry,
         autoRetryMessage: autoRetry ? `Başarı oranınız %${score} (minimum %${minPass}). Eğitim otomatik olarak tekrar atandı.` : null,
