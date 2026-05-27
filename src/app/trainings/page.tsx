@@ -140,25 +140,40 @@ export default function TrainingsPage() {
                             display: 'flex', flexDirection: 'column', gap: 12,
                             boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                         }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                                <div>
-                                    <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 2 }}>
-                                        {counts.completed} / {counts.all} kurs başarıyla tamamlandı
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '2rem', fontWeight: 800, color: '#E53935', lineHeight: 1 }}>%{successPct}</div>
-                                    <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: 1.5, color: '#E53935' }}>BAŞARI</div>
-                                </div>
-                            </div>
-                            <div style={{ height: 12, background: 'var(--bg-tertiary)', borderRadius: 8, overflow: 'hidden' }}>
-                                <div style={{
-                                    height: '100%', width: `${successPct}%`,
-                                    background: 'linear-gradient(90deg, #E53935, #ef5350)',
-                                    boxShadow: '0 0 12px rgba(229,57,53,0.4)',
-                                    transition: 'width 0.8s cubic-bezier(0.22,1,0.36,1)',
-                                }} />
-                            </div>
+                            {(() => {
+                                const isComplete = successPct >= 100;
+                                const accentColor = isComplete ? '#16a34a' : '#E53935';
+                                const accentBg = isComplete
+                                    ? 'linear-gradient(90deg, #16a34a, #22c55e)'
+                                    : 'linear-gradient(90deg, #E53935, #ef5350)';
+                                const glowColor = isComplete ? 'rgba(34,197,94,0.4)' : 'rgba(229,57,53,0.4)';
+                                return (
+                                    <>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+                                            <div>
+                                                <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 2, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                                    {isComplete && (
+                                                        <span className="material-icons-outlined" style={{ color: '#16a34a', fontSize: '1.25rem' }}>verified</span>
+                                                    )}
+                                                    {counts.completed} / {counts.all} kurs başarıyla tamamlandı
+                                                </div>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ fontSize: '2rem', fontWeight: 800, color: accentColor, lineHeight: 1 }}>%{successPct}</div>
+                                                <div style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: 1.5, color: accentColor }}>BAŞARI</div>
+                                            </div>
+                                        </div>
+                                        <div style={{ height: 12, background: 'var(--bg-tertiary)', borderRadius: 8, overflow: 'hidden' }}>
+                                            <div style={{
+                                                height: '100%', width: `${successPct}%`,
+                                                background: accentBg,
+                                                boxShadow: `0 0 12px ${glowColor}`,
+                                                transition: 'all 0.8s cubic-bezier(0.22,1,0.36,1)',
+                                            }} />
+                                        </div>
+                                    </>
+                                );
+                            })()}
                         </div>
 
                         {/* Tabs */}
