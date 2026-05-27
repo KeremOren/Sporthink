@@ -90,6 +90,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ count: assignments.length });
 }
 
+export async function DELETE(req: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const user = session.user as any;
+    if (!['SUPER_ADMIN', 'REGIONAL_MANAGER', 'STORE_MANAGER'].includes(user.role)) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    const assignmentId = searchParams.get('assignmentId');
+    if (!assignmentId) return NextResponse.json({ error: 'assignmentId required' }, { status: 400 });
+
+    await prisma.trainingAssignment.delete({ where: { id: assignmentId } });
+
+    return NextResponse.json({ success: true });
+}
+
 export async function PUT(req: Request) {
     const session = await getServerSession(authOptions);
     if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

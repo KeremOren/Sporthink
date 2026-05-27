@@ -65,6 +65,22 @@ export default function AssignmentStatusPage() {
             .catch(() => { });
     };
 
+    const handleDelete = async (assignmentId: string, userName: string) => {
+        if (!confirm(`"${userName}" adlı personelin atamasını kaldırmak istediğine emin misin?\n\nBu işlem geri alınamaz.`)) return;
+        try {
+            const res = await fetch(`/api/trainings/assignments?assignmentId=${assignmentId}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'Atama kaldırılamadı', 'error');
+                return;
+            }
+            showToast('Atama kaldırıldı', 'success');
+            fetchData();
+        } catch {
+            showToast('Atama kaldırılırken hata oluştu', 'error');
+        }
+    };
+
     const handleAssign = async () => {
         if (selectedUserIds.length === 0) {
             showToast('En az bir personel seçin', 'error');
@@ -351,6 +367,7 @@ export default function AssignmentStatusPage() {
                                                     <th style={{ padding: '8px 12px' }}>Son Tarih</th>
                                                     <th style={{ padding: '8px 12px' }}>Tamamlanma</th>
                                                     <th style={{ padding: '8px 12px' }}>Atayan</th>
+                                                    <th style={{ padding: '8px 12px', width: 60 }}></th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -398,6 +415,31 @@ export default function AssignmentStatusPage() {
                                                             </td>
                                                             <td style={{ padding: '6px 12px', color: 'var(--text-tertiary)' }}>
                                                                 {a.assignedBy ? `${a.assignedBy.firstName} ${a.assignedBy.lastName}` : 'Sistem'}
+                                                            </td>
+                                                            <td style={{ padding: '6px 12px', textAlign: 'center' }}>
+                                                                <button
+                                                                    onClick={() => handleDelete(a.id, `${a.user?.firstName} ${a.user?.lastName}`)}
+                                                                    title="Atamayı kaldır"
+                                                                    style={{
+                                                                        background: 'transparent',
+                                                                        border: '1px solid rgba(239,68,68,0.3)',
+                                                                        borderRadius: 6,
+                                                                        color: '#ef4444',
+                                                                        padding: '4px 8px',
+                                                                        cursor: 'pointer',
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        transition: 'all 0.2s ease',
+                                                                    }}
+                                                                    onMouseEnter={e => {
+                                                                        e.currentTarget.style.background = 'rgba(239,68,68,0.1)';
+                                                                    }}
+                                                                    onMouseLeave={e => {
+                                                                        e.currentTarget.style.background = 'transparent';
+                                                                    }}
+                                                                >
+                                                                    <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>delete</span>
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     );
