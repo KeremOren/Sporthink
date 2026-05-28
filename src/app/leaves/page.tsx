@@ -153,13 +153,13 @@ export default function LeavesPage() {
                     </button>
                 </div>
 
-                <div style={{ padding: '0 28px 32px' }}>
+                <div style={{ padding: '20px 28px 32px' }}>
                     {/* Balance card */}
                     {balance && balance.balance && (
                         <div className="cine-fadeInUp" style={{
                             background: 'linear-gradient(135deg, rgba(22, 163, 74, 0.08), rgba(34, 197, 94, 0.04))',
                             border: '1px solid rgba(22, 163, 74, 0.2)',
-                            borderRadius: 16, padding: 20, marginBottom: 22,
+                            borderRadius: 16, padding: 20, marginBottom: 22, marginTop: 4,
                             display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16,
                         }}>
                             <BalanceTile
