@@ -19,6 +19,8 @@ export default function AdminPage() {
     const [editUser, setEditUser] = useState<any>(null);
     const [form, setForm] = useState({ email: '', password: 'default123', firstName: '', lastName: '', role: 'EMPLOYEE', storeId: '', regionId: '' });
     const [userSearch, setUserSearch] = useState('');
+    const [orgSearch, setOrgSearch] = useState('');
+    const [expandedRegions, setExpandedRegions] = useState<Set<string>>(new Set());
 
     useEffect(() => { document.title = 'Sporthink | Yönetim'; }, []);
 
@@ -236,28 +238,228 @@ export default function AdminPage() {
                         );
                     })()}
 
-                    {tab === 'org' && (
-                        <div className="chart-grid">
-                            <div className="card">
-                                <div className="card-header"><h4 className="card-title">Bölgeler</h4></div>
-                                {regions.map((r: any) => (
-                                    <div key={r.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                                        <div className="font-semibold">{r.name}</div>
-                                        <div className="text-xs text-secondary">Kod: {r.code} • {r._count?.stores || 0} mağaza</div>
+                    {tab === 'org' && (() => {
+                        const REGION_PALETTE: Record<string, { color: string; bg: string; gradient: string }> = {
+                            AKD: { color: '#0ea5e9', bg: 'rgba(14,165,233,0.08)', gradient: 'linear-gradient(135deg, #0ea5e9, #38bdf8)' },
+                            EGE: { color: '#22c55e', bg: 'rgba(34,197,94,0.08)', gradient: 'linear-gradient(135deg, #22c55e, #4ade80)' },
+                            IZM: { color: '#E53935', bg: 'rgba(229,57,53,0.08)', gradient: 'linear-gradient(135deg, #E53935, #ef5350)' },
+                            MAR: { color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)', gradient: 'linear-gradient(135deg, #8b5cf6, #a78bfa)' },
+                            KAR: { color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)' },
+                            ANA: { color: '#ec4899', bg: 'rgba(236,72,153,0.08)', gradient: 'linear-gradient(135deg, #ec4899, #f472b6)' },
+                            DEFAULT: { color: '#64748b', bg: 'rgba(100,116,139,0.08)', gradient: 'linear-gradient(135deg, #64748b, #94a3b8)' },
+                        };
+                        const getPalette = (code: string) => REGION_PALETTE[code] || REGION_PALETTE.DEFAULT;
+
+                        // Toplam çalışan sayısı
+                        const totalEmployees = stores.reduce((sum: number, s: any) => sum + (s._count?.users || 0), 0);
+
+                        // Mağazaları bölgeye göre grupla
+                        const storesByRegion: Record<string, any[]> = {};
+                        stores.forEach((s: any) => {
+                            const rid = s.regionId || s.region?.id || '';
+                            if (!storesByRegion[rid]) storesByRegion[rid] = [];
+                            storesByRegion[rid].push(s);
+                        });
+
+                        // Arama filtresi
+                        const q = orgSearch.trim().toLowerCase();
+                        const matchesQuery = (s: any) => {
+                            if (!q) return true;
+                            return (s.name || '').toLowerCase().includes(q) || (s.code || '').toLowerCase().includes(q);
+                        };
+
+                        const toggleRegion = (rid: string) => {
+                            const next = new Set(expandedRegions);
+                            if (next.has(rid)) next.delete(rid);
+                            else next.add(rid);
+                            setExpandedRegions(next);
+                        };
+
+                        // Arama varsa ilgili bölgeleri otomatik aç
+                        const visibleRegions = regions.map((r: any) => {
+                            const regionStores = (storesByRegion[r.id] || []).filter(matchesQuery);
+                            return { ...r, filteredStores: regionStores };
+                        }).filter((r: any) => !q || r.filteredStores.length > 0);
+
+                        const stats = [
+                            { label: 'Bölge', value: regions.length, icon: 'public', color: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
+                            { label: 'Mağaza', value: stores.length, icon: 'storefront', color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
+                            { label: 'Toplam Çalışan', value: totalEmployees, icon: 'groups', color: '#E53935', bg: 'rgba(229,57,53,0.1)' },
+                        ];
+
+                        return (
+                            <div>
+                                {/* Stat cards */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
+                                    {stats.map((s, idx) => (
+                                        <div key={s.label} style={{
+                                            background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
+                                            border: `1px solid ${s.color}22`,
+                                            borderRadius: 14, padding: '18px 20px',
+                                            display: 'flex', alignItems: 'center', gap: 14,
+                                            boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+                                            transition: 'all 0.25s ease',
+                                            animation: `cine-fadeInUp 0.4s cubic-bezier(0.22,1,0.36,1) ${idx * 0.08}s both`,
+                                        }}>
+                                            <div style={{
+                                                width: 48, height: 48, borderRadius: 12,
+                                                background: s.bg, color: s.color,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                flexShrink: 0,
+                                            }}>
+                                                <span className="material-icons-outlined" style={{ fontSize: '1.5rem' }}>{s.icon}</span>
+                                            </div>
+                                            <div>
+                                                <div style={{ fontSize: '1.9rem', fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
+                                                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 600, marginTop: 4 }}>{s.label}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Search */}
+                                <div style={{ position: 'relative', marginBottom: 16, maxWidth: 420 }}>
+                                    <span className="material-icons-outlined" style={{
+                                        position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                                        color: 'var(--text-tertiary)', fontSize: '1.1rem', pointerEvents: 'none',
+                                    }}>search</span>
+                                    <input
+                                        className="form-input"
+                                        style={{ paddingLeft: 40, paddingRight: orgSearch ? 36 : 12, height: 40 }}
+                                        placeholder="Mağaza adı veya kodu ara..."
+                                        value={orgSearch}
+                                        onChange={e => setOrgSearch(e.target.value)}
+                                    />
+                                    {orgSearch && (
+                                        <button onClick={() => setOrgSearch('')} style={{
+                                            position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                                            background: 'transparent', border: 'none', cursor: 'pointer',
+                                            color: 'var(--text-tertiary)', padding: 4,
+                                        }}>
+                                            <span className="material-icons-outlined" style={{ fontSize: '1.05rem' }}>close</span>
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Region cards (expandable) */}
+                                {visibleRegions.length === 0 ? (
+                                    <div className="empty-state">
+                                        <span className="material-icons-outlined">search_off</span>
+                                        <p>&quot;{orgSearch}&quot; için sonuç bulunamadı</p>
                                     </div>
-                                ))}
-                            </div>
-                            <div className="card">
-                                <div className="card-header"><h4 className="card-title">Mağazalar</h4></div>
-                                {stores.map((s: any) => (
-                                    <div key={s.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                                        <div className="font-semibold">{s.name}</div>
-                                        <div className="text-xs text-secondary">{s.code} • {s.region?.name} • {s._count?.users || 0} çalışan</div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                        {visibleRegions.map((r: any, idx: number) => {
+                                            const palette = getPalette(r.code);
+                                            const regionStores = r.filteredStores;
+                                            const totalRegionEmployees = regionStores.reduce((sum: number, s: any) => sum + (s._count?.users || 0), 0);
+                                            const isExpanded = expandedRegions.has(r.id) || !!q;
+
+                                            return (
+                                                <div key={r.id} style={{
+                                                    background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
+                                                    border: `1px solid ${palette.color}22`,
+                                                    borderRadius: 14, overflow: 'hidden',
+                                                    boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+                                                    animation: `cine-fadeInUp 0.4s cubic-bezier(0.22,1,0.36,1) ${idx * 0.05}s both`,
+                                                }}>
+                                                    {/* Region header */}
+                                                    <button
+                                                        onClick={() => toggleRegion(r.id)}
+                                                        style={{
+                                                            width: '100%', padding: '14px 18px',
+                                                            background: 'transparent', border: 'none', cursor: 'pointer',
+                                                            display: 'flex', alignItems: 'center', gap: 14,
+                                                            textAlign: 'left',
+                                                            transition: 'background 0.2s ease',
+                                                        }}
+                                                        onMouseEnter={e => { e.currentTarget.style.background = palette.bg; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                                                    >
+                                                        <div style={{
+                                                            width: 44, height: 44, borderRadius: 12,
+                                                            background: palette.gradient, color: '#fff',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            flexShrink: 0, boxShadow: `0 4px 12px ${palette.color}33`,
+                                                        }}>
+                                                            <span className="material-icons-outlined" style={{ fontSize: '1.4rem' }}>location_on</span>
+                                                        </div>
+                                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>{r.name}</h4>
+                                                                <span style={{
+                                                                    padding: '2px 8px', borderRadius: 6,
+                                                                    background: palette.bg, color: palette.color,
+                                                                    fontSize: '0.7rem', fontWeight: 700, letterSpacing: 0.5,
+                                                                }}>{r.code}</span>
+                                                            </div>
+                                                            <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', marginTop: 2 }}>
+                                                                {regionStores.length} mağaza • {totalRegionEmployees} çalışan
+                                                            </div>
+                                                        </div>
+                                                        <span className="material-icons-outlined" style={{
+                                                            color: 'var(--text-tertiary)', fontSize: '1.4rem',
+                                                            transition: 'transform 0.25s ease',
+                                                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                                        }}>expand_more</span>
+                                                    </button>
+
+                                                    {/* Stores grid (expanded) */}
+                                                    {isExpanded && regionStores.length > 0 && (
+                                                        <div style={{
+                                                            padding: '4px 14px 14px',
+                                                            borderTop: `1px dashed ${palette.color}33`,
+                                                            display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10,
+                                                        }}>
+                                                            {regionStores.map((s: any) => (
+                                                                <div key={s.id} style={{
+                                                                    padding: '10px 12px', borderRadius: 10,
+                                                                    background: 'var(--bg-secondary)',
+                                                                    border: '1px solid var(--border)',
+                                                                    display: 'flex', alignItems: 'center', gap: 10,
+                                                                    transition: 'all 0.2s ease',
+                                                                }}
+                                                                    onMouseEnter={e => {
+                                                                        e.currentTarget.style.borderColor = palette.color;
+                                                                        e.currentTarget.style.transform = 'translateY(-2px)';
+                                                                    }}
+                                                                    onMouseLeave={e => {
+                                                                        e.currentTarget.style.borderColor = 'var(--border)';
+                                                                        e.currentTarget.style.transform = 'translateY(0)';
+                                                                    }}
+                                                                >
+                                                                    <span className="material-icons-outlined" style={{
+                                                                        color: palette.color, fontSize: '1.1rem', flexShrink: 0,
+                                                                    }}>storefront</span>
+                                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                                        <div style={{ fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                            {s.name}
+                                                                        </div>
+                                                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>
+                                                                            {s.code} • {s._count?.users || 0} çalışan
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {isExpanded && regionStores.length === 0 && (
+                                                        <div style={{
+                                                            padding: '14px 18px', borderTop: `1px dashed ${palette.color}33`,
+                                                            color: 'var(--text-tertiary)', fontSize: '0.82rem', textAlign: 'center',
+                                                        }}>
+                                                            Bu bölgede mağaza yok
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
-                                ))}
+                                )}
                             </div>
-                        </div>
-                    )}
+                        );
+                    })()}
                 </div>
 
                 {/* Create User Modal */}
