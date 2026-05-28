@@ -71,6 +71,14 @@ export default function InsightsPage() {
     const [appliedIds, setAppliedIds] = useState<Set<string>>(new Set());
     const [tab, setTab] = useState<'anomalies' | 'recommendations'>('anomalies');
     const [resultModal, setResultModal] = useState<any>(null);
+    const [severityFilter, setSeverityFilter] = useState<'all' | 'HIGH' | 'MEDIUM' | 'LOW'>('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [hideApplied, setHideApplied] = useState(false);
+    const [page, setPage] = useState(1);
+    const PAGE_SIZE = 10;
+
+    // Filtreler değişince sayfa 1'e dön
+    useEffect(() => { setPage(1); }, [severityFilter, searchQuery, hideApplied, tab]);
 
     useEffect(() => { document.title = 'Sporthink | AI İçgörüler'; }, []);
 
@@ -226,8 +234,125 @@ export default function InsightsPage() {
                         </button>
                     </div>
 
+                    {/* ==================== FILTER BAR ==================== */}
+                    {(() => {
+                        const sourceList: any[] = tab === 'anomalies' ? anomalies : recommendations;
+                        const severityCounts = {
+                            all: sourceList.length,
+                            HIGH: sourceList.filter((x: any) => x.severity === 'HIGH').length,
+                            MEDIUM: sourceList.filter((x: any) => x.severity === 'MEDIUM').length,
+                            LOW: sourceList.filter((x: any) => x.severity === 'LOW').length,
+                        };
+                        const sevChips: Array<{ key: 'all' | 'HIGH' | 'MEDIUM' | 'LOW'; label: string; color: string; bg: string }> = [
+                            { key: 'all', label: 'Tümü', color: '#475569', bg: 'rgba(100,116,139,0.12)' },
+                            { key: 'HIGH', label: 'Yüksek', color: '#dc2626', bg: 'rgba(220,38,38,0.12)' },
+                            { key: 'MEDIUM', label: 'Orta', color: '#d97706', bg: 'rgba(217,119,6,0.12)' },
+                            { key: 'LOW', label: 'Düşük', color: '#0891b2', bg: 'rgba(8,145,178,0.12)' },
+                        ];
+                        return (
+                            <div style={{
+                                background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
+                                border: '1px solid var(--card-border)', borderRadius: 14,
+                                padding: 14, marginBottom: 14,
+                                display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center',
+                                position: 'sticky', top: 12, zIndex: 10,
+                                boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+                            }}>
+                                {/* Severity chips */}
+                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                    {sevChips.map(c => {
+                                        const active = severityFilter === c.key;
+                                        const count = severityCounts[c.key];
+                                        return (
+                                            <button
+                                                key={c.key}
+                                                onClick={() => setSeverityFilter(c.key)}
+                                                style={{
+                                                    padding: '6px 12px', borderRadius: 999,
+                                                    background: active ? c.color : c.bg,
+                                                    color: active ? '#fff' : c.color,
+                                                    border: `1px solid ${active ? c.color : 'transparent'}`,
+                                                    fontSize: '0.78rem', fontWeight: 700,
+                                                    cursor: 'pointer',
+                                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                                    transition: 'all 0.2s ease',
+                                                    boxShadow: active ? `0 4px 12px ${c.color}55` : 'none',
+                                                }}
+                                            >
+                                                {c.label}
+                                                <span style={{
+                                                    padding: '0 6px', borderRadius: 999,
+                                                    background: active ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.06)',
+                                                    fontSize: '0.7rem', fontWeight: 800,
+                                                }}>{count}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Search */}
+                                <div style={{ position: 'relative', flex: '1 1 240px', minWidth: 200 }}>
+                                    <span className="material-icons-outlined" style={{
+                                        position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
+                                        color: 'var(--text-tertiary)', fontSize: '1rem', pointerEvents: 'none',
+                                    }}>search</span>
+                                    <input
+                                        className="form-input"
+                                        style={{ paddingLeft: 34, paddingRight: searchQuery ? 30 : 10, height: 36, fontSize: '0.83rem' }}
+                                        placeholder="Mağaza veya KPI ara..."
+                                        value={searchQuery}
+                                        onChange={e => setSearchQuery(e.target.value)}
+                                    />
+                                    {searchQuery && (
+                                        <button onClick={() => setSearchQuery('')} style={{
+                                            position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+                                            background: 'transparent', border: 'none', cursor: 'pointer',
+                                            color: 'var(--text-tertiary)', padding: 2,
+                                        }}>
+                                            <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>close</span>
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Hide applied toggle (only for recommendations) */}
+                                {tab === 'recommendations' && (
+                                    <label style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                                        padding: '6px 12px', borderRadius: 8,
+                                        background: hideApplied ? 'rgba(34,197,94,0.1)' : 'transparent',
+                                        border: `1px solid ${hideApplied ? 'rgba(34,197,94,0.3)' : 'var(--border)'}`,
+                                        cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
+                                        color: hideApplied ? '#16a34a' : 'var(--text-secondary)',
+                                    }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={hideApplied}
+                                            onChange={e => setHideApplied(e.target.checked)}
+                                            style={{ margin: 0 }}
+                                        />
+                                        Atananları gizle
+                                    </label>
+                                )}
+                            </div>
+                        );
+                    })()}
+
                     {/* Anomaly list */}
-                    {tab === 'anomalies' && (
+                    {tab === 'anomalies' && (() => {
+                        const q = searchQuery.trim().toLowerCase();
+                        const filtered = anomalies.filter(a => {
+                            if (severityFilter !== 'all' && a.severity !== severityFilter) return false;
+                            if (q) {
+                                const hay = `${a.storeName} ${a.kpiName}`.toLowerCase();
+                                if (!hay.includes(q)) return false;
+                            }
+                            return true;
+                        });
+                        const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+                        const currentPage = Math.min(page, totalPages);
+                        const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+                        return (
                         <div style={{ display: 'grid', gap: 12 }}>
                             {anomalies.length === 0 ? (
                                 <EmptyState
@@ -236,7 +361,18 @@ export default function InsightsPage() {
                                     message="Tüm mağazalarınız stabil performans gösteriyor. 👍"
                                     color="#16a34a"
                                 />
-                            ) : anomalies.map((a, idx) => {
+                            ) : filtered.length === 0 ? (
+                                <EmptyState
+                                    icon="search_off"
+                                    title="Sonuç yok"
+                                    message="Filtreyi sıfırlayıp tekrar dene."
+                                    color="#64748b"
+                                />
+                            ) : (<>
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', marginBottom: 4 }}>
+                                    {filtered.length} sonuç • Sayfa {currentPage} / {totalPages}
+                                </div>
+                                {paged.map((a, idx) => {
                                 const sev = SEVERITY_META[a.severity];
                                 return (
                                     <div key={idx} className="cine-fadeInUp" style={{
@@ -285,12 +421,30 @@ export default function InsightsPage() {
                                         </div>
                                     </div>
                                 );
-                            })}
+                                })}
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onChange={setPage} />
+                            </>)}
                         </div>
-                    )}
+                        );
+                    })()}
 
                     {/* Recommendation list */}
-                    {tab === 'recommendations' && (
+                    {tab === 'recommendations' && (() => {
+                        const q = searchQuery.trim().toLowerCase();
+                        const filtered = recommendations.filter(rec => {
+                            if (severityFilter !== 'all' && rec.severity !== severityFilter) return false;
+                            if (hideApplied && appliedIds.has(rec.id)) return false;
+                            if (q) {
+                                const hay = `${rec.storeName} ${rec.kpiName} ${rec.training.title}`.toLowerCase();
+                                if (!hay.includes(q)) return false;
+                            }
+                            return true;
+                        });
+                        const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+                        const currentPage = Math.min(page, totalPages);
+                        const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+                        return (
                         <div style={{ display: 'grid', gap: 12 }}>
                             {recommendations.length === 0 ? (
                                 <EmptyState
@@ -299,7 +453,18 @@ export default function InsightsPage() {
                                     message="Sistem KPI'larınızı izliyor. Anomali tespit edilirse otomatik eğitim önerileri burada listelenir."
                                     color="#8b5cf6"
                                 />
-                            ) : recommendations.map((rec, idx) => {
+                            ) : filtered.length === 0 ? (
+                                <EmptyState
+                                    icon="search_off"
+                                    title="Sonuç yok"
+                                    message="Filtreyi sıfırlayıp tekrar dene."
+                                    color="#64748b"
+                                />
+                            ) : (<>
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-tertiary)', marginBottom: 4 }}>
+                                    {filtered.length} sonuç • Sayfa {currentPage} / {totalPages}
+                                </div>
+                                {paged.map((rec, idx) => {
                                 const sev = SEVERITY_META[rec.severity];
                                 const applied = appliedIds.has(rec.id);
                                 const applying = applyingId === rec.id;
@@ -378,9 +543,12 @@ export default function InsightsPage() {
                                         </div>
                                     </div>
                                 );
-                            })}
+                                })}
+                                <Pagination currentPage={currentPage} totalPages={totalPages} onChange={setPage} />
+                            </>)}
                         </div>
-                    )}
+                        );
+                    })()}
                 </div>
 
                 {/* Atama Sonucu Modal */}
@@ -627,6 +795,54 @@ function SummaryCard({ icon, color, bg, label, value, subText }: any) {
                 <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)' }}>{label}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{subText}</div>
             </div>
+        </div>
+    );
+}
+
+function Pagination({ currentPage, totalPages, onChange }: { currentPage: number; totalPages: number; onChange: (p: number) => void }) {
+    if (totalPages <= 1) return null;
+    return (
+        <div style={{
+            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8,
+            marginTop: 12, padding: '12px 16px',
+            background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
+            border: '1px solid var(--card-border)', borderRadius: 12,
+        }}>
+            <button
+                onClick={() => onChange(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                style={{
+                    padding: '6px 12px', borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: 'transparent',
+                    color: currentPage === 1 ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                    fontSize: '0.82rem', fontWeight: 600,
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                }}
+            >
+                <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>chevron_left</span>
+                Önceki
+            </button>
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', padding: '0 12px' }}>
+                Sayfa <strong style={{ color: 'var(--text-primary)' }}>{currentPage}</strong> / {totalPages}
+            </div>
+            <button
+                onClick={() => onChange(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                style={{
+                    padding: '6px 12px', borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: 'transparent',
+                    color: currentPage === totalPages ? 'var(--text-tertiary)' : 'var(--text-primary)',
+                    cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                    fontSize: '0.82rem', fontWeight: 600,
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                }}
+            >
+                Sonraki
+                <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>chevron_right</span>
+            </button>
         </div>
     );
 }
