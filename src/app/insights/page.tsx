@@ -167,11 +167,11 @@ export default function InsightsPage() {
                     </div>
                 </div>
 
-                <div style={{ padding: '0 28px 32px' }}>
+                <div style={{ padding: '20px 28px 32px' }}>
                     {/* Summary cards */}
                     <div style={{
                         display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                        gap: 14, marginBottom: 22,
+                        gap: 16, marginBottom: 24, marginTop: 4,
                     }}>
                         <SummaryCard
                             icon="crisis_alert" color="#dc2626" bg="#fee2e2"
@@ -789,7 +789,8 @@ function SummaryCard({ icon, color, bg, label, value, subText, active, onClick }
                 backdropFilter: 'blur(16px)',
                 border: `${active ? 2 : 1}px solid ${active ? color : 'var(--card-border)'}`,
                 borderRadius: 14,
-                padding: 16, display: 'flex', gap: 12, alignItems: 'center',
+                padding: '18px 18px', display: 'flex', gap: 14, alignItems: 'center',
+                minHeight: 84,
                 cursor: isClickable ? 'pointer' : 'default',
                 transition: 'all 0.25s ease',
                 boxShadow: active ? `0 6px 20px ${color}33` : '0 2px 8px rgba(0,0,0,0.04)',
