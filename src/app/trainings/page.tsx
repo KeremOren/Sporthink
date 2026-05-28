@@ -66,6 +66,26 @@ export default function TrainingsPage() {
             .finally(() => setLoading(false));
     };
 
+    const handleDeleteTraining = async (t: any) => {
+        const assignCount = t._count?.assignments || 0;
+        const msg = assignCount > 0
+            ? `"${t.title}" eğitimini arşivlemek istediğine emin misin?\n\n• ${assignCount} kişiye atanmış durumda\n• Eğitim listeden kaldırılacak ama geçmiş veriler (atamalar, quiz denemeleri) korunacak\n\nDevam edilsin mi?`
+            : `"${t.title}" eğitimini arşivlemek istediğine emin misin?\n\nEğitim listeden kaldırılacak ama geri yüklenebilir.`;
+        if (!confirm(msg)) return;
+        try {
+            const res = await fetch(`/api/trainings/${t.id}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'Eğitim silinemedi', 'error');
+                return;
+            }
+            showToast('Eğitim arşivlendi', 'success');
+            fetchTrainings();
+        } catch {
+            showToast('Eğitim silinirken hata oluştu', 'error');
+        }
+    };
+
     const handleCreate = async () => {
         try {
             const res = await fetch('/api/trainings', {
@@ -497,16 +517,43 @@ export default function TrainingsPage() {
                                                     <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>group</span>
                                                     Atama Durumu
                                                 </button>
-                                                <button onClick={() => router.push(`/trainings/${t.id}`)} style={{
-                                                    padding: '10px 14px', borderRadius: 10,
-                                                    background: 'linear-gradient(135deg, #E53935, #ef5350)',
-                                                    color: '#fff', border: 'none', fontSize: '0.82rem', fontWeight: 600,
-                                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                                                    boxShadow: '0 4px 12px rgba(229,57,53,0.3)',
-                                                }}>
-                                                    <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>visibility</span>
-                                                    Görüntüle
-                                                </button>
+                                                <div style={{ display: 'flex', gap: 8 }}>
+                                                    <button onClick={() => router.push(`/trainings/${t.id}`)} style={{
+                                                        flex: 1,
+                                                        padding: '10px 14px', borderRadius: 10,
+                                                        background: 'linear-gradient(135deg, #E53935, #ef5350)',
+                                                        color: '#fff', border: 'none', fontSize: '0.82rem', fontWeight: 600,
+                                                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                                                        boxShadow: '0 4px 12px rgba(229,57,53,0.3)',
+                                                    }}>
+                                                        <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>visibility</span>
+                                                        Görüntüle
+                                                    </button>
+                                                    {role === 'SUPER_ADMIN' && (
+                                                        <button
+                                                            onClick={() => handleDeleteTraining(t)}
+                                                            title="Eğitimi sil (arşivle)"
+                                                            style={{
+                                                                padding: '10px 12px', borderRadius: 10,
+                                                                background: 'rgba(239,68,68,0.08)',
+                                                                color: '#ef4444',
+                                                                border: '1px solid rgba(239,68,68,0.3)',
+                                                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                transition: 'all 0.2s ease',
+                                                            }}
+                                                            onMouseEnter={e => {
+                                                                e.currentTarget.style.background = 'rgba(239,68,68,0.18)';
+                                                                e.currentTarget.style.borderColor = '#ef4444';
+                                                            }}
+                                                            onMouseLeave={e => {
+                                                                e.currentTarget.style.background = 'rgba(239,68,68,0.08)';
+                                                                e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
+                                                            }}
+                                                        >
+                                                            <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>delete</span>
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

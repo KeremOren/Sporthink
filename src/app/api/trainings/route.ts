@@ -14,7 +14,14 @@ export async function GET(req: Request) {
 
     const where: any = {};
     if (category) where.category = category;
-    if (status) where.status = status;
+    // Default olarak sadece ACTIVE eğitimleri göster, status=all ile arşivler de gelir
+    if (status === 'all') {
+        // no filter
+    } else if (status) {
+        where.status = status;
+    } else {
+        where.status = 'ACTIVE';
+    }
 
     const trainings = await prisma.training.findMany({
         where,
