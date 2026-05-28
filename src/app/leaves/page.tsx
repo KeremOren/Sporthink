@@ -230,26 +230,46 @@ export default function LeavesPage() {
                     {/* Status filter */}
                     <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                         {[
-                            { value: '', label: 'Tümü' },
-                            { value: 'PENDING', label: 'Bekleyen' },
-                            { value: 'APPROVED', label: 'Onaylanan' },
-                            { value: 'REJECTED', label: 'Reddedilen' },
-                            { value: 'CANCELLED', label: 'İptal' },
-                        ].map(f => (
-                            <button
-                                key={f.value}
-                                onClick={() => setStatusFilter(f.value)}
-                                style={{
-                                    padding: '6px 12px',
-                                    background: statusFilter === f.value ? 'var(--text-primary)' : 'transparent',
-                                    color: statusFilter === f.value ? 'var(--background)' : 'var(--text-secondary)',
-                                    border: `1px solid ${statusFilter === f.value ? 'var(--text-primary)' : 'var(--card-border)'}`,
-                                    borderRadius: 999, fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer',
-                                }}
-                            >
-                                {f.label}
-                            </button>
-                        ))}
+                            { value: '', label: 'Tümü', color: '#6366f1', bg: 'rgba(99,102,241,0.12)', icon: 'list_alt' },
+                            { value: 'PENDING', label: 'Bekleyen', color: '#d97706', bg: 'rgba(217,119,6,0.12)', icon: 'schedule' },
+                            { value: 'APPROVED', label: 'Onaylanan', color: '#16a34a', bg: 'rgba(22,163,74,0.12)', icon: 'check_circle' },
+                            { value: 'REJECTED', label: 'Reddedilen', color: '#dc2626', bg: 'rgba(220,38,38,0.12)', icon: 'cancel' },
+                            { value: 'CANCELLED', label: 'İptal', color: '#64748b', bg: 'rgba(100,116,139,0.12)', icon: 'block' },
+                        ].map(f => {
+                            const active = statusFilter === f.value;
+                            return (
+                                <button
+                                    key={f.value}
+                                    onClick={() => setStatusFilter(f.value)}
+                                    style={{
+                                        padding: '7px 14px',
+                                        background: active ? f.color : f.bg,
+                                        color: active ? '#fff' : f.color,
+                                        border: `1px solid ${active ? f.color : 'transparent'}`,
+                                        borderRadius: 999,
+                                        fontSize: '0.8rem', fontWeight: 700,
+                                        cursor: 'pointer',
+                                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                                        transition: 'all 0.2s ease',
+                                        boxShadow: active ? `0 4px 12px ${f.color}55` : 'none',
+                                        transform: active ? 'translateY(-1px)' : 'translateY(0)',
+                                    }}
+                                    onMouseEnter={e => {
+                                        if (active) return;
+                                        (e.currentTarget as HTMLButtonElement).style.background = `${f.color}22`;
+                                        (e.currentTarget as HTMLButtonElement).style.borderColor = `${f.color}55`;
+                                    }}
+                                    onMouseLeave={e => {
+                                        if (active) return;
+                                        (e.currentTarget as HTMLButtonElement).style.background = f.bg;
+                                        (e.currentTarget as HTMLButtonElement).style.borderColor = 'transparent';
+                                    }}
+                                >
+                                    <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>{f.icon}</span>
+                                    {f.label}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     {/* List */}
