@@ -177,21 +177,29 @@ export default function InsightsPage() {
                             icon="crisis_alert" color="#dc2626" bg="#fee2e2"
                             label="Yüksek Risk" value={anomalySummary?.high || 0}
                             subText="Acil müdahale gerekli"
+                            active={tab === 'anomalies' && severityFilter === 'HIGH'}
+                            onClick={() => { setTab('anomalies'); setSeverityFilter('HIGH'); }}
                         />
                         <SummaryCard
                             icon="warning" color="#d97706" bg="#fef3c7"
                             label="Orta Risk" value={anomalySummary?.medium || 0}
                             subText="Yakın takip gerekli"
+                            active={tab === 'anomalies' && severityFilter === 'MEDIUM'}
+                            onClick={() => { setTab('anomalies'); setSeverityFilter('MEDIUM'); }}
                         />
                         <SummaryCard
                             icon="store" color="#7c3aed" bg="#ede9fe"
                             label="Etkilenen Mağaza" value={anomalySummary?.affectedStores || 0}
                             subText={`${anomalySummary?.total || 0} anomali tespit edildi`}
+                            active={tab === 'anomalies' && severityFilter === 'all'}
+                            onClick={() => { setTab('anomalies'); setSeverityFilter('all'); }}
                         />
                         <SummaryCard
                             icon="auto_awesome" color="#16a34a" bg="#dcfce7"
                             label="AI Öneri" value={recSummary?.total || 0}
                             subText="Otomatik eğitim önerileri"
+                            active={tab === 'recommendations'}
+                            onClick={() => { setTab('recommendations'); setSeverityFilter('all'); }}
                         />
                     </div>
 
@@ -237,18 +245,15 @@ export default function InsightsPage() {
                     {/* ==================== FILTER BAR ==================== */}
                     {(() => {
                         const sourceList: any[] = tab === 'anomalies' ? anomalies : recommendations;
-                        const severityCounts = {
-                            all: sourceList.length,
-                            HIGH: sourceList.filter((x: any) => x.severity === 'HIGH').length,
-                            MEDIUM: sourceList.filter((x: any) => x.severity === 'MEDIUM').length,
-                            LOW: sourceList.filter((x: any) => x.severity === 'LOW').length,
+                        const activeLabel: Record<string, string> = {
+                            all: 'Tümü', HIGH: 'Yüksek Risk', MEDIUM: 'Orta Risk', LOW: 'Düşük Risk',
                         };
-                        const sevChips: Array<{ key: 'all' | 'HIGH' | 'MEDIUM' | 'LOW'; label: string; color: string; bg: string }> = [
-                            { key: 'all', label: 'Tümü', color: '#475569', bg: 'rgba(100,116,139,0.12)' },
-                            { key: 'HIGH', label: 'Yüksek', color: '#dc2626', bg: 'rgba(220,38,38,0.12)' },
-                            { key: 'MEDIUM', label: 'Orta', color: '#d97706', bg: 'rgba(217,119,6,0.12)' },
-                            { key: 'LOW', label: 'Düşük', color: '#0891b2', bg: 'rgba(8,145,178,0.12)' },
-                        ];
+                        const activeColor: Record<string, string> = {
+                            all: '#475569', HIGH: '#dc2626', MEDIUM: '#d97706', LOW: '#0891b2',
+                        };
+                        const activeBg: Record<string, string> = {
+                            all: 'rgba(100,116,139,0.12)', HIGH: 'rgba(220,38,38,0.12)', MEDIUM: 'rgba(217,119,6,0.12)', LOW: 'rgba(8,145,178,0.12)',
+                        };
                         return (
                             <div style={{
                                 background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
@@ -258,36 +263,34 @@ export default function InsightsPage() {
                                 position: 'sticky', top: 12, zIndex: 10,
                                 boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
                             }}>
-                                {/* Severity chips */}
-                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                    {sevChips.map(c => {
-                                        const active = severityFilter === c.key;
-                                        const count = severityCounts[c.key];
-                                        return (
-                                            <button
-                                                key={c.key}
-                                                onClick={() => setSeverityFilter(c.key)}
-                                                style={{
-                                                    padding: '6px 12px', borderRadius: 999,
-                                                    background: active ? c.color : c.bg,
-                                                    color: active ? '#fff' : c.color,
-                                                    border: `1px solid ${active ? c.color : 'transparent'}`,
-                                                    fontSize: '0.78rem', fontWeight: 700,
-                                                    cursor: 'pointer',
-                                                    display: 'inline-flex', alignItems: 'center', gap: 6,
-                                                    transition: 'all 0.2s ease',
-                                                    boxShadow: active ? `0 4px 12px ${c.color}55` : 'none',
-                                                }}
-                                            >
-                                                {c.label}
-                                                <span style={{
-                                                    padding: '0 6px', borderRadius: 999,
-                                                    background: active ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.06)',
-                                                    fontSize: '0.7rem', fontWeight: 800,
-                                                }}>{count}</span>
-                                            </button>
-                                        );
-                                    })}
+                                {/* Active filter badge */}
+                                <div style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                    padding: '6px 12px', borderRadius: 999,
+                                    background: activeBg[severityFilter],
+                                    color: activeColor[severityFilter],
+                                    fontSize: '0.78rem', fontWeight: 700,
+                                }}>
+                                    <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>filter_list</span>
+                                    {activeLabel[severityFilter]}
+                                    <span style={{
+                                        padding: '0 6px', borderRadius: 999,
+                                        background: 'rgba(0,0,0,0.08)',
+                                        fontSize: '0.7rem', fontWeight: 800,
+                                    }}>{sourceList.filter((x: any) => severityFilter === 'all' || x.severity === severityFilter).length}</span>
+                                    {severityFilter !== 'all' && (
+                                        <button
+                                            onClick={() => setSeverityFilter('all')}
+                                            title="Filtreyi temizle"
+                                            style={{
+                                                background: 'transparent', border: 'none', cursor: 'pointer',
+                                                color: activeColor[severityFilter], padding: 0, marginLeft: 2,
+                                                display: 'inline-flex', alignItems: 'center',
+                                            }}
+                                        >
+                                            <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>close</span>
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* Search */}
@@ -775,13 +778,37 @@ function AssignmentResultModal({ data, onClose }: { data: any; onClose: () => vo
     );
 }
 
-function SummaryCard({ icon, color, bg, label, value, subText }: any) {
+function SummaryCard({ icon, color, bg, label, value, subText, active, onClick }: any) {
+    const isClickable = !!onClick;
     return (
-        <div className="cine-fadeInUp" style={{
-            background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
-            border: '1px solid var(--card-border)', borderRadius: 14,
-            padding: 16, display: 'flex', gap: 12, alignItems: 'center',
-        }}>
+        <div
+            className="cine-fadeInUp"
+            onClick={onClick}
+            style={{
+                background: active ? bg : 'var(--glass-bg)',
+                backdropFilter: 'blur(16px)',
+                border: `${active ? 2 : 1}px solid ${active ? color : 'var(--card-border)'}`,
+                borderRadius: 14,
+                padding: 16, display: 'flex', gap: 12, alignItems: 'center',
+                cursor: isClickable ? 'pointer' : 'default',
+                transition: 'all 0.25s ease',
+                boxShadow: active ? `0 6px 20px ${color}33` : '0 2px 8px rgba(0,0,0,0.04)',
+                transform: active ? 'translateY(-2px)' : 'translateY(0)',
+                position: 'relative',
+            }}
+            onMouseEnter={e => {
+                if (!isClickable || active) return;
+                (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+                (e.currentTarget as HTMLDivElement).style.boxShadow = `0 6px 18px ${color}22`;
+                (e.currentTarget as HTMLDivElement).style.borderColor = `${color}66`;
+            }}
+            onMouseLeave={e => {
+                if (!isClickable || active) return;
+                (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+                (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
+                (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--card-border)';
+            }}
+        >
             <div style={{
                 width: 44, height: 44, borderRadius: 10,
                 background: bg, color: color,
@@ -795,6 +822,14 @@ function SummaryCard({ icon, color, bg, label, value, subText }: any) {
                 <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-primary)' }}>{label}</div>
                 <div style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>{subText}</div>
             </div>
+            {active && (
+                <div style={{
+                    position: 'absolute', top: 8, right: 8,
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: color,
+                    boxShadow: `0 0 0 3px ${color}33`,
+                }} />
+            )}
         </div>
     );
 }
