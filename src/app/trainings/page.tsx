@@ -377,7 +377,9 @@ export default function TrainingsPage() {
     }
 
     /* ---------------- MANAGER VIEW (existing catalog design) ---------------- */
-    const mgrAssigned = trainings.filter(t => myAssignments[t.id]);
+    // "Atanan Eğitimler" sekmesi: en az 1 kişiye atanmış tüm eğitimleri göster
+    // (manager kendisine atanmamış olsa bile, başkalarına atadığı eğitimleri görür)
+    const mgrAssigned = trainings.filter(t => (t._count?.assignments || 0) > 0);
     const mgrVisible = mgrTab === 'assigned' ? mgrAssigned : trainings;
 
     return (
@@ -435,7 +437,7 @@ export default function TrainingsPage() {
                     ) : mgrVisible.length === 0 ? (
                         <div className="empty-state">
                             <span className="material-icons-outlined">school</span>
-                            <p>{mgrTab === 'assigned' ? 'Sana atanmış bir eğitim yok' : 'Henüz eğitim eklenmemiş'}</p>
+                            <p>{mgrTab === 'assigned' ? 'Henüz kimseye eğitim atanmamış' : 'Henüz eğitim eklenmemiş'}</p>
                         </div>
                     ) : (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
