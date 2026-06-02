@@ -334,7 +334,8 @@ export default function DashboardPage() {
                                 onChange={e => setFilterStoreId(e.target.value)}
                                 style={{
                                     padding: '10px 14px', borderRadius: 10,
-                                    border: '1px solid var(--border)', background: '#fff',
+                                    border: '1px solid var(--border)', background: 'var(--bg-secondary)',
+                                    color: 'var(--text-primary)',
                                     fontSize: '0.88rem', fontWeight: 600, minWidth: 260,
                                     cursor: 'pointer',
                                 }}
@@ -516,7 +517,7 @@ export default function DashboardPage() {
                             {/* Overdue Trainings Alert */}
                             {data?.overdueTrainingsList?.length > 0 && (
                                 <div style={{
-                                    background: '#fff', border: '1px solid rgba(239,68,68,0.25)',
+                                    background: 'var(--bg-secondary)', border: '1px solid rgba(239,68,68,0.25)',
                                     borderRadius: 14, overflow: 'hidden',
                                     boxShadow: '0 4px 16px rgba(239,68,68,0.08)',
                                 }}>
@@ -620,11 +621,11 @@ function InsightsWidget() {
                     href="/insights"
                     style={{
                         padding: '8px 14px',
-                        background: '#fff',
-                        color: '#7c3aed', textDecoration: 'none',
+                        background: 'var(--bg-secondary)',
+                        color: '#8b5cf6', textDecoration: 'none',
                         borderRadius: 10, fontSize: '0.82rem', fontWeight: 700,
                         display: 'inline-flex', alignItems: 'center', gap: 6,
-                        border: '1px solid rgba(139, 92, 246, 0.25)',
+                        border: '1px solid rgba(139, 92, 246, 0.4)',
                         flexShrink: 0,
                     }}
                 >
@@ -641,7 +642,7 @@ function InsightsWidget() {
                         return (
                             <div key={idx} style={{
                                 padding: 12, borderRadius: 10,
-                                background: '#fff',
+                                background: 'var(--bg-secondary)',
                                 border: `1px solid ${sev}33`,
                                 borderLeftWidth: 3, borderLeftColor: sev,
                             }}>
@@ -834,17 +835,17 @@ function TrainingProgressCard({ completionRate, completed, total, overdue, quizP
 function ProgressStat({ icon, label, value, color }: { icon: string; label: string; value: number; color: string }) {
     return (
         <div style={{
-            background: '#fff', border: '1px solid rgba(0,0,0,0.05)',
+            background: 'var(--bg-secondary)', border: '1px solid var(--border)',
             borderRadius: 10, padding: '10px 8px', textAlign: 'center',
         }}>
             <div style={{
                 width: 30, height: 30, borderRadius: 8, margin: '0 auto 6px',
-                background: `${color}18`, color,
+                background: `${color}22`, color,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             }}>
                 <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>{icon}</span>
             </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>{value}</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{value}</div>
             <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', marginTop: 4, fontWeight: 600 }}>{label}</div>
         </div>
     );
@@ -928,11 +929,11 @@ function StoreLeaderboardCard({ stores }: { stores: any[] }) {
 
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{
-                                    fontSize: '0.85rem', fontWeight: 700, color: '#0f172a',
+                                    fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)',
                                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 4,
                                 }}>{s.storeName}</div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <div style={{ flex: 1, height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden' }}>
+                                    <div style={{ flex: 1, height: 6, background: 'var(--bg-tertiary)', borderRadius: 3, overflow: 'hidden' }}>
                                         <div style={{
                                             height: '100%', width: `${s.completionRate}%`,
                                             background: `linear-gradient(90deg, ${col.from}, ${col.to})`,
