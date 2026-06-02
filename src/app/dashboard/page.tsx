@@ -797,7 +797,7 @@ function TrainingProgressCard({ completionRate, completed, total, overdue, quizP
                             <stop offset="100%" stopColor={tier.to} />
                         </linearGradient>
                     </defs>
-                    <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#eef0f3" strokeWidth={stroke} />
+                    <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--bg-tertiary)" strokeWidth={stroke} />
                     <circle
                         cx={size / 2} cy={size / 2} r={r} fill="none"
                         stroke="url(#ringGrad)" strokeWidth={stroke} strokeLinecap="round"
