@@ -72,6 +72,20 @@ export default function PulsePage() {
         finally { setSubmitting(false); }
     };
 
+    const handleDeleteSurvey = async (surveyId: string, question: string) => {
+        if (!confirm(`"${question}" anketini silmek istediğine emin misin?\n\nAnket ve tüm oylar kalıcı olarak silinecek.`)) return;
+        try {
+            const res = await fetch(`/api/pulse?surveyId=${surveyId}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const d = await res.json().catch(() => ({}));
+                showToast(d?.error || 'Anket silinemedi', 'error');
+                return;
+            }
+            showToast('Anket silindi', 'success');
+            fetchSurveys();
+        } catch { showToast('Silinirken hata oluştu', 'error'); }
+    };
+
     const handleRespond = async (surveyId: string) => {
         const idx = pickByPoll[surveyId];
         if (typeof idx !== 'number') { showToast('Bir şık seçin', 'error'); return; }
@@ -381,6 +395,9 @@ export default function PulsePage() {
                                                     <PollCard
                                                         key={p.id}
                                                         poll={p}
+                                                        currentUserId={user.id}
+                                                        currentUserRole={user.role}
+                                                        onDelete={() => handleDeleteSurvey(p.id, p.question || p.title)}
                                                         pick={pickByPoll[p.id]}
                                                         onPick={(idx) => setPickByPoll(prev => ({ ...prev, [p.id]: idx }))}
                                                         onSubmit={() => handleRespond(p.id)}
@@ -472,8 +489,9 @@ function SectionTitle({ icon, title, count }: { icon: string; title: string; cou
     );
 }
 
-function PollCard({ poll, pick, onPick, onSubmit, submitting, isManager }: {
+function PollCard({ poll, pick, onPick, onSubmit, submitting, isManager, currentUserId, currentUserRole, onDelete }: {
     poll: any; pick: number | undefined; onPick: (i: number) => void;
+    currentUserId?: string; currentUserRole?: string; onDelete?: () => void;
     onSubmit: () => void; submitting: boolean; isManager: boolean;
 }) {
     const total = poll.totalResponses || 0;
@@ -510,14 +528,43 @@ function PollCard({ poll, pick, onPick, onSubmit, submitting, isManager }: {
                         </span>
                     )}
                 </div>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <span className="material-icons-outlined" style={{ fontSize: '0.9rem' }}>how_to_vote</span>
-                    {total} oy
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span className="material-icons-outlined" style={{ fontSize: '0.9rem' }}>how_to_vote</span>
+                        {total} oy
+                    </div>
+                    {onDelete && (poll.createdById === currentUserId || currentUserRole === 'SUPER_ADMIN') && (
+                        <button
+                            onClick={onDelete}
+                            title="Anketi sil"
+                            style={{
+                                background: 'transparent',
+                                border: '1px solid rgba(239,68,68,0.3)',
+                                borderRadius: 6,
+                                color: '#ef4444',
+                                padding: '3px 6px',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                transition: 'all 0.2s ease',
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.background = 'rgba(239,68,68,0.1)';
+                                e.currentTarget.style.borderColor = '#ef4444';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
+                            }}
+                        >
+                            <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>delete</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
             {/* Question */}
-            <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.4 }}>
+            <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.4 }}>
                 {poll.question}
             </h4>
 

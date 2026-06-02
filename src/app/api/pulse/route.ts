@@ -83,6 +83,7 @@ export async function GET() {
             options,
             optionCounts,
             createdBy: survey.createdBy,
+            createdById: survey.createdById,
             createdAt: survey.createdAt,
             expiresAt: survey.expiresAt,
             hasResponded: !!myResponse,
@@ -99,6 +100,30 @@ export async function GET() {
     });
 
     return NextResponse.json(enriched);
+}
+
+export async function DELETE(req: Request) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const user = session.user as any;
+    const { searchParams } = new URL(req.url);
+    const surveyId = searchParams.get('surveyId');
+    if (!surveyId) return NextResponse.json({ error: 'surveyId gerekli' }, { status: 400 });
+
+    const survey = await prisma.pulseSurvey.findUnique({ where: { id: surveyId } });
+    if (!survey) return NextResponse.json({ error: 'Anket bulunamadı' }, { status: 404 });
+
+    // Sadece anketi oluşturan veya SUPER_ADMIN silebilir
+    if (survey.createdById !== user.id && user.role !== 'SUPER_ADMIN') {
+        return NextResponse.json({ error: 'Sadece kendi oluşturduğunuz anketi silebilirsiniz' }, { status: 403 });
+    }
+
+    // Önce yanıtları sil, sonra anketi
+    await prisma.pulseSurveyResponse.deleteMany({ where: { surveyId } });
+    await prisma.pulseSurvey.delete({ where: { id: surveyId } });
+
+    return NextResponse.json({ success: true });
 }
 
 export async function POST(req: Request) {
