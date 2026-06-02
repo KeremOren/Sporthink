@@ -152,10 +152,10 @@ export default function PulsePage() {
                                 }}>
                                     {/* Create Card */}
                                     <div style={{
-                                        background: '#fff', borderRadius: 16,
+                                        background: 'var(--bg-secondary)', borderRadius: 16,
                                         border: '1px solid rgba(34,197,94,0.18)',
                                         borderLeft: '4px solid #22c55e',
-                                        boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+                                        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                                         padding: 22, position: 'relative', overflow: 'hidden',
                                     }}>
                                         <div style={{ position: 'absolute', top: -50, right: -50, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
@@ -169,14 +169,14 @@ export default function PulsePage() {
                                             }}>
                                                 <span className="material-icons-outlined" style={{ fontSize: '1.1rem' }}>add_chart</span>
                                             </div>
-                                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
+                                            <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)' }}>
                                                 Yeni Yönetici Anketi Başlat
                                             </h3>
                                         </div>
 
                                         {/* Question */}
                                         <div style={{ marginBottom: 14, position: 'relative' }}>
-                                            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6 }}>
+                                            <label style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
                                                 Anket Sorusu
                                             </label>
                                             <input
@@ -185,12 +185,13 @@ export default function PulsePage() {
                                                 onChange={e => setForm(f => ({ ...f, question: e.target.value }))}
                                                 style={{
                                                     width: '100%', padding: '12px 14px',
-                                                    borderRadius: 10, border: '1px solid #e2e8f0',
-                                                    fontSize: '0.95rem', background: '#f8fafc',
+                                                    borderRadius: 10, border: '1px solid var(--border)',
+                                                    fontSize: '0.95rem', background: 'var(--bg-tertiary)',
+                                                    color: 'var(--text-primary)',
                                                     fontWeight: 600, outline: 'none',
                                                 }}
-                                                onFocus={e => { e.currentTarget.style.border = '1px solid #22c55e'; e.currentTarget.style.background = '#fff'; }}
-                                                onBlur={e => { e.currentTarget.style.border = '1px solid #e2e8f0'; e.currentTarget.style.background = '#f8fafc'; }}
+                                                onFocus={e => { e.currentTarget.style.border = '1px solid #22c55e'; e.currentTarget.style.background = 'var(--bg-secondary)'; }}
+                                                onBlur={e => { e.currentTarget.style.border = '1px solid var(--border)'; e.currentTarget.style.background = 'var(--bg-tertiary)'; }}
                                             />
                                         </div>
 
@@ -207,11 +208,12 @@ export default function PulsePage() {
                                                         onChange={e => updateOption(i, e.target.value)}
                                                         style={{
                                                             width: '100%', padding: '11px 42px 11px 42px',
-                                                            borderRadius: 10, border: '1px solid #e2e8f0',
-                                                            fontSize: '0.9rem', background: '#f8fafc', outline: 'none',
+                                                            borderRadius: 10, border: '1px solid var(--border)',
+                                                            fontSize: '0.9rem', background: 'var(--bg-tertiary)',
+                                                            color: 'var(--text-primary)', outline: 'none',
                                                         }}
-                                                        onFocus={e => { e.currentTarget.style.border = '1px solid #22c55e'; e.currentTarget.style.background = '#fff'; }}
-                                                        onBlur={e => { e.currentTarget.style.border = '1px solid #e2e8f0'; e.currentTarget.style.background = '#f8fafc'; }}
+                                                        onFocus={e => { e.currentTarget.style.border = '1px solid #22c55e'; e.currentTarget.style.background = 'var(--bg-secondary)'; }}
+                                                        onBlur={e => { e.currentTarget.style.border = '1px solid var(--border)'; e.currentTarget.style.background = 'var(--bg-tertiary)'; }}
                                                     />
                                                     {form.options.length > 2 && (
                                                         <button
@@ -327,17 +329,17 @@ export default function PulsePage() {
                                         }}>
                                             <span className="material-icons-outlined" style={{ fontSize: '1.6rem' }}>verified</span>
                                         </div>
-                                        <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#065f46', position: 'relative' }}>
+                                        <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#15803d', position: 'relative' }}>
                                             Fikriniz Önemli
                                         </h4>
-                                        <p style={{ margin: 0, fontSize: '0.82rem', lineHeight: 1.55, color: '#047857', position: 'relative' }}>
+                                        <p style={{ margin: 0, fontSize: '0.82rem', lineHeight: 1.55, color: '#166534', position: 'relative' }}>
                                             Katıldığınız anketler yönetim ekibine doğrudan veri sağlar.
                                             Her ankette sadece <strong>1 oy hakkınız</strong> bulunmaktadır.
                                             Şeffaf sonuçları oy verdikten hemen sonra görebilirsiniz.
                                         </p>
                                         <div style={{
                                             marginTop: 4, display: 'flex', gap: 14,
-                                            fontSize: '0.7rem', color: '#065f46', fontWeight: 700, position: 'relative',
+                                            fontSize: '0.7rem', color: '#15803d', fontWeight: 700, position: 'relative',
                                         }}>
                                             <span>🔒 Anonim</span>
                                             <span>⚡ Anında</span>
@@ -469,9 +471,9 @@ function PollCard({ poll, pick, onPick, onSubmit, submitting, isManager }: {
 
     return (
         <div style={{
-            background: '#fff', borderRadius: 16,
-            border: '1px solid rgba(0,0,0,0.06)',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+            background: 'var(--bg-secondary)', borderRadius: 16,
+            border: '1px solid var(--border)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
             padding: 20, display: 'flex', flexDirection: 'column', gap: 14,
             position: 'relative',
         }}>
