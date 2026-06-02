@@ -22,7 +22,7 @@ export async function GET(req: Request) {
                 orderBy: { createdAt: 'asc' },
             },
         },
-        orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+        orderBy: { createdAt: 'desc' },
         take: 50,
     });
 
