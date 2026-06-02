@@ -24,8 +24,16 @@ export async function GET(req: Request) {
     }
     else if (user.role === 'ASSISTANT_MANAGER') where.storeId = user.storeId;
 
-    if (role && user.role !== 'STORE_MANAGER') where.role = role;
+    if (role && user.role !== 'STORE_MANAGER') {
+        // Virgülle ayrılmış birden fazla rol desteği (örn. "EMPLOYEE,ASSISTANT_MANAGER")
+        const roles = role.split(',').map(r => r.trim()).filter(Boolean);
+        where.role = roles.length > 1 ? { in: roles } : roles[0];
+    }
     if (storeId) where.storeId = storeId;
+
+    // isActive query param (örn. shifts sayfası ?isActive=true)
+    const isActiveParam = searchParams.get('isActive');
+    if (isActiveParam === 'true') where.isActive = true;
 
     // Sadece /employees sayfası _count ister; query param ile kontrol et
     const withCount = searchParams.get('withCount') === '1';

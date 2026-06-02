@@ -20,7 +20,7 @@ type Shift = {
     store: { id: string; name: string };
 };
 
-type Employee = { id: string; firstName: string; lastName: string; role: string };
+type Employee = { id: string; firstName: string; lastName: string; role: string; storeId?: string | null };
 
 const SHIFT_TYPES = [
     { code: 'MORNING', label: 'Sabah',  icon: 'wb_sunny',    color: '#f59e0b', startTime: '09:00', endTime: '15:00' },
@@ -127,12 +127,19 @@ export default function ShiftsPage() {
 
     const handleAddShift = async (data: any) => {
         try {
+            // storeId önceliği: yöneticinin mağazası → seçilen çalışanın mağazası → data
+            const selectedEmp = employees.find(e => e.id === data.userId);
+            const resolvedStoreId = user.storeId || selectedEmp?.storeId || data.storeId;
+            if (!resolvedStoreId) {
+                showToast('Seçilen çalışanın mağazası bulunamadı', 'error');
+                return;
+            }
             const res = await fetch('/api/shifts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userId: data.userId,
-                    storeId: user.storeId || data.storeId,
+                    storeId: resolvedStoreId,
                     date: data.date,
                     startTime: data.startTime,
                     endTime: data.endTime,
