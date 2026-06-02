@@ -170,3 +170,43 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     return NextResponse.json({ error: 'Geçersiz action' }, { status: 400 });
 }
+
+/**
+ * DELETE /api/leaves/[id]
+ * Talep sahibi veya SUPER_ADMIN bir izin kaydını tamamen siler.
+ * Onaylanmış yıllık izin silinirse bakiye geri yüklenir.
+ */
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const session = await getServerSession(authOptions);
+    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const user = session.user as any;
+    const leave = await prisma.leaveRequest.findUnique({ where: { id } });
+    if (!leave) return NextResponse.json({ error: 'Talep bulunamadı' }, { status: 404 });
+
+    // Sadece talep sahibi veya SUPER_ADMIN silebilir
+    if (leave.userId !== user.id && user.role !== 'SUPER_ADMIN') {
+        return NextResponse.json({ error: 'Sadece kendi talebinizi silebilirsiniz' }, { status: 403 });
+    }
+
+    // Onaylanmış yıllık izin siliniyorsa bakiyeyi geri yükle
+    if (leave.status === 'APPROVED' && leave.type === 'ANNUAL') {
+        const year = new Date(leave.startDate).getFullYear();
+        const balance = await prisma.leaveBalance.findUnique({
+            where: { userId_year: { userId: leave.userId, year } },
+        });
+        if (balance) {
+            await prisma.leaveBalance.update({
+                where: { id: balance.id },
+                data: {
+                    usedDays: Math.max(0, balance.usedDays - leave.days),
+                    remainingDays: balance.remainingDays + leave.days,
+                },
+            });
+        }
+    }
+
+    await prisma.leaveRequest.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+}

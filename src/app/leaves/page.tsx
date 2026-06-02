@@ -115,6 +115,19 @@ export default function LeavesPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!confirm('Bu izin kaydını silmek istediğine emin misin?\n\nKayıt kalıcı olarak silinecek.')) return;
+        try {
+            const res = await fetch(`/api/leaves/${id}`, { method: 'DELETE' });
+            const result = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(result.error || 'Silinemedi');
+            showToast('İzin kaydı silindi', 'success');
+            reload();
+        } catch (e: any) {
+            showToast(e.message, 'error');
+        }
+    };
+
     const myRequests = requests.filter(r => r.userId === user?.id);
     const pendingApproval = requests.filter(r => r.status === 'PENDING' && r.userId !== user?.id);
     const visibleList = tab === 'my' ? myRequests : (isManager ? requests.filter(r => r.userId !== user?.id) : myRequests);
@@ -290,9 +303,11 @@ export default function LeavesPage() {
                                     request={req}
                                     isManager={isManager}
                                     isOwn={req.userId === user?.id}
+                                    isAdmin={role === 'SUPER_ADMIN'}
                                     onApprove={() => handleAction(req.id, 'APPROVE')}
                                     onReject={() => setRejectingId(req.id)}
                                     onCancel={() => handleAction(req.id, 'CANCEL')}
+                                    onDelete={() => handleDelete(req.id)}
                                 />
                             ))}
                         </div>
@@ -389,11 +404,13 @@ function BalanceTile({ icon, color, label, value, subText, highlight }: any) {
     );
 }
 
-function LeaveCard({ request, isManager, isOwn, onApprove, onReject, onCancel }: any) {
+function LeaveCard({ request, isManager, isOwn, isAdmin, onApprove, onReject, onCancel, onDelete }: any) {
     const type = LEAVE_TYPES[request.type] || LEAVE_TYPES.OTHER;
     const status = STATUS_META[request.status] || STATUS_META.PENDING;
     const canManagerAct = isManager && !isOwn && request.status === 'PENDING';
     const canCancel = isOwn && request.status === 'PENDING';
+    // Sil: kendi talebi (bekleyen hariç — onu iptal eder) veya admin her zaman
+    const canDelete = (isOwn && request.status !== 'PENDING') || isAdmin;
 
     return (
         <div className="cine-fadeInUp" style={{
@@ -478,6 +495,28 @@ function LeaveCard({ request, isManager, isOwn, onApprove, onReject, onCancel }:
             {canCancel && (
                 <button onClick={onCancel} className="btn btn-ghost btn-sm">
                     İptal Et
+                </button>
+            )}
+            {canDelete && (
+                <button
+                    onClick={onDelete}
+                    title="İzin kaydını sil"
+                    style={{
+                        background: 'transparent',
+                        border: '1px solid rgba(239,68,68,0.3)',
+                        borderRadius: 8,
+                        color: '#ef4444',
+                        padding: '7px 10px',
+                        cursor: 'pointer',
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        fontSize: '0.78rem', fontWeight: 600,
+                        transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; e.currentTarget.style.borderColor = '#ef4444'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; }}
+                >
+                    <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>delete</span>
+                    Sil
                 </button>
             )}
         </div>
