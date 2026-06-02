@@ -296,12 +296,26 @@ export default function PulsePage() {
                                                 disabled={submitting || !form.question.trim()}
                                                 style={{
                                                     padding: '11px 22px', borderRadius: 10,
-                                                    background: form.question.trim() ? 'linear-gradient(135deg, #22c55e, #16a34a)' : '#cbd5e1',
-                                                    color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.9rem',
+                                                    background: form.question.trim()
+                                                        ? 'linear-gradient(135deg, #E53935, #ef5350)'
+                                                        : 'var(--bg-tertiary)',
+                                                    color: form.question.trim() ? '#fff' : 'var(--text-tertiary)',
+                                                    border: form.question.trim() ? 'none' : '1px solid var(--border)',
+                                                    fontWeight: 700, fontSize: '0.9rem',
                                                     cursor: form.question.trim() && !submitting ? 'pointer' : 'not-allowed',
                                                     display: 'inline-flex', alignItems: 'center', gap: 8,
-                                                    boxShadow: form.question.trim() ? '0 6px 16px rgba(34,197,94,0.35)' : 'none',
+                                                    boxShadow: form.question.trim() ? '0 6px 18px rgba(229,57,53,0.4)' : 'none',
                                                     transition: 'all 0.2s ease',
+                                                }}
+                                                onMouseEnter={e => {
+                                                    if (form.question.trim() && !submitting) {
+                                                        e.currentTarget.style.transform = 'translateY(-1px)';
+                                                        e.currentTarget.style.boxShadow = '0 8px 22px rgba(229,57,53,0.5)';
+                                                    }
+                                                }}
+                                                onMouseLeave={e => {
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                    e.currentTarget.style.boxShadow = form.question.trim() ? '0 6px 18px rgba(229,57,53,0.4)' : 'none';
                                                 }}
                                             >
                                                 <span className="material-icons-outlined" style={{ fontSize: '1.1rem' }}>campaign</span>
@@ -593,11 +607,26 @@ function PollCard({ poll, pick, onPick, onSubmit, submitting, isManager }: {
                         disabled={submitting || typeof pick !== 'number'}
                         style={{
                             padding: '8px 16px', borderRadius: 8,
-                            background: typeof pick === 'number' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : '#cbd5e1',
-                            color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.82rem',
+                            background: typeof pick === 'number'
+                                ? 'linear-gradient(135deg, #E53935, #ef5350)'
+                                : 'var(--bg-tertiary)',
+                            color: typeof pick === 'number' ? '#fff' : 'var(--text-tertiary)',
+                            border: typeof pick === 'number' ? 'none' : '1px solid var(--border)',
+                            fontWeight: 700, fontSize: '0.82rem',
                             cursor: typeof pick === 'number' && !submitting ? 'pointer' : 'not-allowed',
                             display: 'inline-flex', alignItems: 'center', gap: 6,
-                            boxShadow: typeof pick === 'number' ? '0 4px 12px rgba(34,197,94,0.3)' : 'none',
+                            boxShadow: typeof pick === 'number' ? '0 4px 14px rgba(229,57,53,0.4)' : 'none',
+                            transition: 'all 0.2s ease',
+                        }}
+                        onMouseEnter={e => {
+                            if (typeof pick === 'number' && !submitting) {
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                                e.currentTarget.style.boxShadow = '0 6px 18px rgba(229,57,53,0.5)';
+                            }
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = typeof pick === 'number' ? '0 4px 14px rgba(229,57,53,0.4)' : 'none';
                         }}
                     >
                         <span className="material-icons-outlined" style={{ fontSize: '1rem' }}>how_to_vote</span>
