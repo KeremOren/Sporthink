@@ -3,6 +3,15 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
+import { notifyUser } from '@/lib/notify';
+
+const SHIFT_TYPE_LABEL: Record<string, string> = {
+    MORNING: 'Sabah', EVENING: 'Akşam', FULL: 'Tam Gün', NIGHT: 'Gece',
+};
+
+function formatShiftDate(d: Date): string {
+    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' });
+}
 
 /**
  * GET /api/shifts?storeId=...&startDate=...&endDate=...
@@ -105,6 +114,18 @@ export async function POST(req: Request) {
             store: { select: { id: true, name: true } },
         },
     });
+
+    // Vardiya atanan çalışana bildirim gönder (kendine atamadıysa)
+    if (userId !== user.id) {
+        const typeLabel = SHIFT_TYPE_LABEL[type] || 'Tam Gün';
+        notifyUser({
+            userId,
+            type: 'SHIFT_ASSIGNED',
+            title: 'Yeni vardiya atandı',
+            message: `${formatShiftDate(new Date(date))} — ${typeLabel} vardiyası (${startTime}-${endTime}) size atandı.`,
+            link: '/shifts',
+        }).catch(() => {});
+    }
 
     return NextResponse.json({ shift }, { status: 201 });
 }

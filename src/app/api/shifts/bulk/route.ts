@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { v4 as uuidv4 } from 'uuid';
+import { notifyUsers } from '@/lib/notify';
 
 /**
  * POST /api/shifts/bulk
@@ -54,6 +55,17 @@ export async function POST(req: Request) {
         } catch (e) {
             // skip invalid entries
         }
+    }
+
+    // Vardiya atanan çalışanlara bildirim (kendisi hariç, her çalışana 1 kez)
+    const notifyIds = Array.from(new Set(created.map((s: any) => s.userId))).filter(id => id !== user.id);
+    if (notifyIds.length > 0) {
+        notifyUsers(notifyIds, {
+            type: 'SHIFT_ASSIGNED',
+            title: 'Yeni vardiya planı',
+            message: 'Vardiya planınız güncellendi. Vardiyalar sayfasından görebilirsiniz.',
+            link: '/shifts',
+        }).catch(() => {});
     }
 
     return NextResponse.json({ created: created.length, shifts: created });
