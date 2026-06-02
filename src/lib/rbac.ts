@@ -166,7 +166,7 @@ export const NAV_ITEMS = [
     { label: 'Mağaza Ligi', href: '/league', icon: 'emoji_events', roles: ['SUPER_ADMIN', 'REGIONAL_MANAGER', 'STORE_MANAGER', 'ASSISTANT_MANAGER', 'EMPLOYEE'] },
     { label: 'Gelişim Dosyası', href: '/profile', icon: 'folder_shared', roles: ['SUPER_ADMIN', 'REGIONAL_MANAGER', 'STORE_MANAGER', 'EMPLOYEE'] },
     { label: 'Sertifikalarım', href: '/certificates', icon: 'workspace_premium', roles: ['SUPER_ADMIN', 'REGIONAL_MANAGER', 'STORE_MANAGER', 'ASSISTANT_MANAGER', 'EMPLOYEE'] },
-    { label: 'Nabız Anketi', href: '/pulse', icon: 'poll', roles: ['SUPER_ADMIN', 'STORE_MANAGER'] },
+    { label: 'Nabız Anketi', href: '/pulse', icon: 'poll', roles: ['SUPER_ADMIN', 'REGIONAL_MANAGER', 'STORE_MANAGER', 'ASSISTANT_MANAGER', 'EMPLOYEE'] },
     { label: 'Topluluk', href: '/community', icon: 'forum', roles: ['SUPER_ADMIN', 'REGIONAL_MANAGER', 'STORE_MANAGER', 'ASSISTANT_MANAGER', 'EMPLOYEE'] },
     { label: 'Sistem Logları', href: '/audit', icon: 'history', roles: ['SUPER_ADMIN'] },
     { label: 'Yönetim', href: '/admin', icon: 'admin_panel_settings', roles: ['SUPER_ADMIN'] },
