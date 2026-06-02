@@ -884,20 +884,20 @@ function StoreLeaderboardCard({ stores }: { stores: any[] }) {
                         {stores.length} mağaza • Ortalama %{avg}
                     </div>
                 </div>
-                <div style={{ display: 'inline-flex', background: '#f1f5f9', borderRadius: 8, padding: 3 }}>
+                <div style={{ display: 'inline-flex', background: 'var(--bg-tertiary)', borderRadius: 8, padding: 3 }}>
                     <button onClick={() => setTab('top')} style={{
                         padding: '6px 14px', borderRadius: 6, border: 'none',
-                        background: tab === 'top' ? '#fff' : 'transparent',
-                        color: tab === 'top' ? '#E53935' : '#64748b',
+                        background: tab === 'top' ? 'var(--bg-secondary)' : 'transparent',
+                        color: tab === 'top' ? '#E53935' : 'var(--text-secondary)',
                         fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
-                        boxShadow: tab === 'top' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                        boxShadow: tab === 'top' ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
                     }}>🔝 En İyiler</button>
                     <button onClick={() => setTab('flop')} style={{
                         padding: '6px 14px', borderRadius: 6, border: 'none',
-                        background: tab === 'flop' ? '#fff' : 'transparent',
-                        color: tab === 'flop' ? '#E53935' : '#64748b',
+                        background: tab === 'flop' ? 'var(--bg-secondary)' : 'transparent',
+                        color: tab === 'flop' ? '#E53935' : 'var(--text-secondary)',
                         fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer',
-                        boxShadow: tab === 'flop' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                        boxShadow: tab === 'flop' ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
                     }}>⚠️ Geride Kalanlar</button>
                 </div>
             </div>
@@ -910,19 +910,19 @@ function StoreLeaderboardCard({ stores }: { stores: any[] }) {
                         <div key={s.storeName} style={{
                             display: 'flex', alignItems: 'center', gap: 12,
                             padding: '10px 12px', borderRadius: 10,
-                            background: badge ? col.bg : '#fff',
-                            border: `1px solid ${badge ? col.from + '30' : 'rgba(0,0,0,0.05)'}`,
+                            background: badge ? col.bg : 'var(--bg-secondary)',
+                            border: `1px solid ${badge ? col.from + '30' : 'var(--border)'}`,
                             transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                         }}
-                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)'; }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; }}
                             onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                         >
                             <div style={{
                                 width: 36, height: 36, borderRadius: 10,
-                                background: badge ? badge.bg : '#f1f5f9',
+                                background: badge ? badge.bg : 'var(--bg-tertiary)',
                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: badge ? '1.1rem' : '0.85rem', fontWeight: 800,
-                                color: badge ? '#fff' : '#64748b', flexShrink: 0,
+                                color: badge ? '#fff' : 'var(--text-secondary)', flexShrink: 0,
                             }}>
                                 {badge ? badge.emoji : `#${idx + 1}`}
                             </div>
