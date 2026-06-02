@@ -361,15 +361,20 @@ function BalanceTile({ icon, color, label, value, subText, highlight }: any) {
     return (
         <div style={{
             padding: 14,
-            background: highlight ? 'linear-gradient(135deg, #16a34a, #15803d)' : 'rgba(255, 255, 255, 0.5)',
+            background: highlight
+                ? 'linear-gradient(135deg, #16a34a, #15803d)'
+                : 'var(--card-bg, var(--bg-secondary))',
+            border: highlight ? 'none' : '1px solid var(--card-border, var(--border))',
             borderRadius: 12,
             display: 'flex', alignItems: 'center', gap: 12,
+            boxShadow: highlight ? '0 6px 16px rgba(22,163,74,0.25)' : '0 2px 6px rgba(0,0,0,0.04)',
         }}>
             <div style={{
                 width: 44, height: 44, borderRadius: 10,
-                background: highlight ? 'rgba(255, 255, 255, 0.2)' : `${color}20`,
+                background: highlight ? 'rgba(255, 255, 255, 0.2)' : `${color}22`,
                 color: highlight ? '#fff' : color,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
             }}>
                 <span className="material-icons-outlined">{icon}</span>
             </div>
