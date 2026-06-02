@@ -229,12 +229,13 @@ KAPSAM KURALI (ÇOK ÖNEMLİ):
         if (!answer) {
             // All models failed — return clear error
             console.error('All Gemini models failed. Last error:', lastError);
-            
-            const errorAnswer = `⚠️ **Gemini API Geçici Olarak Kullanılamıyor**\n\nAPI key'iniz rate limit'e ulaşmış durumda. Bu genellikle yeni oluşturulmuş API key'lerde birkaç saat sürebilir.\n\n**Yapabilecekleriniz:**\n1. ⏳ Birkaç dakika bekleyip tekrar deneyin\n2. 🔑 [Google AI Studio](https://aistudio.google.com/apikey)'dan yeni bir projede key oluşturun\n3. 📊 Rate Limit sayfanızı kontrol edin\n\n_Sistem şu an Sporthink bilgi tabanı ile yanıt verecek._\n\n---\n\n${generateFallbackAnswer(question, user, userStats)}`;
+
+            const keyInfo = apiKey ? `key: ...${apiKey.slice(-6)}` : 'KEY YOK';
+            const errorAnswer = `⚠️ **Gemini API Hatası (Teşhis Modu)**\n\n**Asıl hata:**\n\`\`\`\n${lastError || 'bilinmiyor'}\n\`\`\`\n\n(${keyInfo})\n\n---\n\n${generateFallbackAnswer(question, user, userStats)}`;
 
             return NextResponse.json({
                 answer: errorAnswer,
-                sources: ['Sporthink Bilgi Tabanı (API Bekleniyor)'],
+                sources: ['Teşhis Modu'],
                 timestamp: new Date().toISOString(),
             });
         }
