@@ -264,8 +264,10 @@ export default function PulsePage() {
                                                 onChange={e => setForm(f => ({ ...f, expiresAt: e.target.value }))}
                                                 style={{
                                                     width: '100%', padding: '11px 14px',
-                                                    borderRadius: 10, border: '1px solid #e2e8f0',
-                                                    fontSize: '0.9rem', background: '#f8fafc', outline: 'none',
+                                                    borderRadius: 10, border: '1px solid var(--border)',
+                                                    fontSize: '0.9rem', background: 'var(--bg-tertiary)',
+                                                    color: 'var(--text-primary)', outline: 'none',
+                                                    colorScheme: 'dark light',
                                                 }}
                                             />
                                             <div style={{
@@ -283,8 +285,8 @@ export default function PulsePage() {
                                                 disabled={submitting}
                                                 style={{
                                                     padding: '11px 18px', borderRadius: 10,
-                                                    background: 'transparent', border: '1px solid #e2e8f0',
-                                                    color: '#64748b', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
+                                                    background: 'transparent', border: '1px solid var(--border)',
+                                                    color: 'var(--text-secondary)', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer',
                                                 }}
                                             >
                                                 Temizle
@@ -519,25 +521,25 @@ function PollCard({ poll, pick, onPick, onSubmit, submitting, isManager }: {
                             <div key={i} style={{
                                 position: 'relative', overflow: 'hidden',
                                 padding: '11px 14px', borderRadius: 10,
-                                border: isMine ? '2px solid #22c55e' : '1px solid #e2e8f0',
-                                background: '#f8fafc',
+                                border: isMine ? '2px solid #22c55e' : '1px solid var(--border)',
+                                background: 'var(--bg-tertiary)',
                             }}>
                                 <div style={{
                                     position: 'absolute', inset: 0,
                                     width: `${pct}%`,
                                     background: isWinner
-                                        ? 'linear-gradient(90deg, rgba(34,197,94,0.18), rgba(34,197,94,0.06))'
-                                        : 'linear-gradient(90deg, rgba(229,57,53,0.12), rgba(229,57,53,0.03))',
+                                        ? 'linear-gradient(90deg, rgba(34,197,94,0.22), rgba(34,197,94,0.08))'
+                                        : 'linear-gradient(90deg, rgba(229,57,53,0.18), rgba(229,57,53,0.05))',
                                     transition: 'width 0.8s cubic-bezier(0.22,1,0.36,1)',
                                 }} />
                                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                                    <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                                         {isMine && <span style={{ color: '#22c55e' }}>✓</span>}
                                         {isWinner && total > 0 && <span>🏆</span>}
                                         {opt}
                                     </span>
-                                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: isWinner ? '#16a34a' : '#475569' }}>
-                                        %{pct} <span style={{ fontWeight: 600, fontSize: '0.72rem', color: '#94a3b8' }}>({count})</span>
+                                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: isWinner ? '#16a34a' : 'var(--text-secondary)' }}>
+                                        %{pct} <span style={{ fontWeight: 600, fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>({count})</span>
                                     </span>
                                 </div>
                             </div>
@@ -551,20 +553,20 @@ function PollCard({ poll, pick, onPick, onSubmit, submitting, isManager }: {
                             disabled={!poll.isOpen}
                             style={{
                                 padding: '11px 14px', borderRadius: 10,
-                                border: isPicked ? '2px solid #22c55e' : '1px solid #e2e8f0',
-                                background: isPicked ? 'rgba(34,197,94,0.06)' : '#fff',
-                                color: '#0f172a', fontSize: '0.9rem', fontWeight: 600, textAlign: 'left',
+                                border: isPicked ? '2px solid #22c55e' : '1px solid var(--border)',
+                                background: isPicked ? 'rgba(34,197,94,0.1)' : 'var(--bg-tertiary)',
+                                color: 'var(--text-primary)', fontSize: '0.9rem', fontWeight: 600, textAlign: 'left',
                                 cursor: poll.isOpen ? 'pointer' : 'not-allowed',
                                 display: 'flex', alignItems: 'center', gap: 10,
                                 transition: 'all 0.2s ease',
                             }}
-                            onMouseEnter={e => { if (poll.isOpen && !isPicked) { e.currentTarget.style.borderColor = '#22c55e'; e.currentTarget.style.background = 'rgba(34,197,94,0.03)'; } }}
-                            onMouseLeave={e => { if (poll.isOpen && !isPicked) { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#fff'; } }}
+                            onMouseEnter={e => { if (poll.isOpen && !isPicked) { e.currentTarget.style.borderColor = '#22c55e'; e.currentTarget.style.background = 'rgba(34,197,94,0.06)'; } }}
+                            onMouseLeave={e => { if (poll.isOpen && !isPicked) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-tertiary)'; } }}
                         >
                             <span style={{
                                 width: 22, height: 22, borderRadius: '50%',
-                                border: isPicked ? '6px solid #22c55e' : '2px solid #cbd5e1',
-                                background: '#fff', flexShrink: 0,
+                                border: isPicked ? '6px solid #22c55e' : '2px solid var(--border-light, var(--border))',
+                                background: 'var(--bg-secondary)', flexShrink: 0,
                                 transition: 'border 0.2s ease',
                             }} />
                             {opt}
