@@ -413,10 +413,12 @@ export default function PulsePage() {
                                         <>
                                             <SectionTitle icon="history" title="Eski Skor Anketleri" count={legacy.length} />
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: 18 }}>
-                                                {legacy.map((survey: any) => (
+                                                {legacy.map((survey: any) => {
+                                                    const canDelete = survey.createdById === user.id || user.role === 'SUPER_ADMIN';
+                                                    return (
                                                     <div key={survey.id} className="card" style={{ border: survey.isActive ? '1px solid var(--primary)' : '1px solid var(--border)' }}>
-                                                        <div className="card-header" style={{ borderBottom: 'none' }}>
-                                                            <div>
+                                                        <div className="card-header" style={{ borderBottom: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                                                            <div style={{ flex: 1, minWidth: 0 }}>
                                                                 <h4 className="card-title" style={{ fontSize: '1rem' }}>
                                                                     {survey.isActive && <span className="badge badge-success" style={{ marginRight: 8, fontSize: '0.6rem' }}>Aktif</span>}
                                                                     {survey.title}
@@ -425,6 +427,34 @@ export default function PulsePage() {
                                                                     Dönem: {survey.period} | {survey.totalResponses} yanıt
                                                                 </div>
                                                             </div>
+                                                            {canDelete && (
+                                                                <button
+                                                                    onClick={() => handleDeleteSurvey(survey.id, survey.title)}
+                                                                    title="Anketi sil"
+                                                                    style={{
+                                                                        background: 'transparent',
+                                                                        border: '1px solid rgba(239,68,68,0.3)',
+                                                                        borderRadius: 6,
+                                                                        color: '#ef4444',
+                                                                        padding: '4px 8px',
+                                                                        cursor: 'pointer',
+                                                                        display: 'inline-flex',
+                                                                        alignItems: 'center',
+                                                                        flexShrink: 0,
+                                                                        transition: 'all 0.2s ease',
+                                                                    }}
+                                                                    onMouseEnter={e => {
+                                                                        e.currentTarget.style.background = 'rgba(239,68,68,0.1)';
+                                                                        e.currentTarget.style.borderColor = '#ef4444';
+                                                                    }}
+                                                                    onMouseLeave={e => {
+                                                                        e.currentTarget.style.background = 'transparent';
+                                                                        e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
+                                                                    }}
+                                                                >
+                                                                    <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>delete</span>
+                                                                </button>
+                                                            )}
                                                         </div>
                                                         {survey.totalResponses > 0 && (
                                                             <div style={{ padding: '12px 0' }}>
@@ -440,7 +470,8 @@ export default function PulsePage() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         </>
                                     )}
