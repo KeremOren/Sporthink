@@ -123,10 +123,13 @@ export default function PulsePage() {
                             <h1 style={{
                                 fontSize: '2rem', fontWeight: 800, margin: 0,
                                 display: 'inline-flex', alignItems: 'center', gap: 10,
-                                background: 'linear-gradient(135deg, #0f172a 0%, #475569 100%)',
-                                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                                color: 'var(--text-primary)',
                             }}>
-                                Şirket Anketleri <span style={{ fontSize: '1.8rem' }}>📊</span>
+                                <span style={{
+                                    background: 'linear-gradient(135deg, #E53935 0%, #ef5350 100%)',
+                                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                                }}>Şirket Anketleri</span>
+                                <span style={{ fontSize: '1.8rem' }}>📊</span>
                             </h1>
                             <div style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', marginTop: 4 }}>
                                 Fikrini belirt, şirket süreçlerinde söz sahibi ol.
@@ -423,18 +426,18 @@ function MiniStatPill({ icon, label, value, color }: { icon: string; label: stri
         <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '8px 14px', borderRadius: 999,
-            background: '#fff', border: `1px solid ${color}30`,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            background: 'var(--bg-secondary)', border: `1px solid ${color}40`,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
         }}>
             <span style={{
                 width: 26, height: 26, borderRadius: 7,
-                background: `${color}18`, color,
+                background: `${color}22`, color,
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             }}>
                 <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>{icon}</span>
             </span>
             <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.1 }}>
-                <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a' }}>{value}</span>
+                <span style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-primary)' }}>{value}</span>
                 <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', fontWeight: 600 }}>{label}</span>
             </div>
         </div>
@@ -445,8 +448,8 @@ function SectionTitle({ icon, title, count }: { icon: string; title: string; cou
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
             <span className="material-icons-outlined" style={{ color: '#E53935', fontSize: '1.2rem' }}>{icon}</span>
-            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0f172a' }}>{title}</h3>
-            <span style={{ padding: '2px 8px', borderRadius: 999, background: '#f1f5f9', color: '#64748b', fontSize: '0.7rem', fontWeight: 700 }}>{count}</span>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'var(--text-primary)' }}>{title}</h3>
+            <span style={{ padding: '2px 8px', borderRadius: 999, background: 'rgba(229,57,53,0.12)', color: '#E53935', fontSize: '0.7rem', fontWeight: 700 }}>{count}</span>
         </div>
     );
 }
