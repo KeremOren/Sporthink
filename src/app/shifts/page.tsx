@@ -557,13 +557,16 @@ function ShiftModal({ title, initial, employees, onSave, onClose }: any) {
                             style={{
                                 width: '100%', padding: '10px 12px',
                                 border: '1px solid var(--card-border)', borderRadius: 8,
-                                background: 'var(--background)', color: 'var(--text-primary)',
+                                background: 'var(--bg-secondary)', color: 'var(--text-primary)',
                                 fontSize: '0.9rem',
+                                colorScheme: 'dark light',
                             }}
                         >
-                            <option value="">Seçiniz</option>
+                            <option value="" style={{ background: '#1a1a1a', color: '#fff' }}>Seçiniz</option>
                             {employees.map((e: Employee) => (
-                                <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>
+                                <option key={e.id} value={e.id} style={{ background: '#1a1a1a', color: '#fff' }}>
+                                    {e.firstName} {e.lastName}
+                                </option>
                             ))}
                         </select>
                     </div>
