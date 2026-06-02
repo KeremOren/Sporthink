@@ -157,10 +157,8 @@ export default function LeavesPage() {
                     {/* Balance card */}
                     {balance && balance.balance && (
                         <div className="cine-fadeInUp" style={{
-                            background: 'linear-gradient(135deg, rgba(22, 163, 74, 0.08), rgba(34, 197, 94, 0.04))',
-                            border: '1px solid rgba(22, 163, 74, 0.2)',
-                            borderRadius: 16, padding: 20, marginBottom: 22, marginTop: 4,
-                            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16,
+                            borderRadius: 16, marginBottom: 22, marginTop: 4,
+                            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14,
                         }}>
                             <BalanceTile
                                 icon="event_available" color="#16a34a"
@@ -358,32 +356,34 @@ export default function LeavesPage() {
 }
 
 function BalanceTile({ icon, color, label, value, subText, highlight }: any) {
+    // Her kart kendi renginin solid (parlak) versiyonunu kullanır — dark/light her ikisinde net görünür
+    const gradient = highlight
+        ? 'linear-gradient(135deg, #16a34a, #15803d)'
+        : `linear-gradient(135deg, ${color}, ${color}dd)`;
     return (
         <div style={{
-            padding: 14,
-            background: highlight
-                ? 'linear-gradient(135deg, #16a34a, #15803d)'
-                : 'var(--card-bg, var(--bg-secondary))',
-            border: highlight ? 'none' : '1px solid var(--card-border, var(--border))',
-            borderRadius: 12,
+            padding: 16,
+            background: gradient,
+            borderRadius: 14,
             display: 'flex', alignItems: 'center', gap: 12,
-            boxShadow: highlight ? '0 6px 16px rgba(22,163,74,0.25)' : '0 2px 6px rgba(0,0,0,0.04)',
+            boxShadow: `0 6px 18px ${color}40`,
+            color: '#fff',
         }}>
             <div style={{
                 width: 44, height: 44, borderRadius: 10,
-                background: highlight ? 'rgba(255, 255, 255, 0.2)' : `${color}22`,
-                color: highlight ? '#fff' : color,
+                background: 'rgba(255, 255, 255, 0.22)',
+                color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0,
             }}>
                 <span className="material-icons-outlined">{icon}</span>
             </div>
             <div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: highlight ? '#fff' : color, lineHeight: 1 }}>
-                    {value} <span style={{ fontSize: '0.7rem', fontWeight: 600, opacity: 0.85 }}>gün</span>
+                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#fff', lineHeight: 1 }}>
+                    {value} <span style={{ fontSize: '0.7rem', fontWeight: 600, opacity: 0.9 }}>gün</span>
                 </div>
-                <div style={{ fontSize: '0.78rem', fontWeight: 600, color: highlight ? 'rgba(255,255,255,0.95)' : 'var(--text-primary)' }}>{label}</div>
-                <div style={{ fontSize: '0.7rem', color: highlight ? 'rgba(255,255,255,0.85)' : 'var(--text-tertiary)' }}>{subText}</div>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'rgba(255,255,255,0.98)' }}>{label}</div>
+                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.85)' }}>{subText}</div>
             </div>
         </div>
     );
