@@ -72,7 +72,7 @@ Değerlendirme kriterleri:
 
 Türkçe yaz. Sadece JSON döndür.`;
 
-        const modelsToTry = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
+        const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
         for (const modelName of modelsToTry) {
             try {
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
