@@ -768,7 +768,7 @@ function TrainingProgressCard({ completionRate, completed, total, overdue, quizP
 
     return (
         <div style={{
-            background: 'linear-gradient(135deg, #ffffff 0%, #fafbfc 100%)',
+            background: 'var(--glass-bg)', backdropFilter: 'blur(16px)',
             border: '1px solid rgba(229,57,53,0.06)', borderRadius: 14,
             padding: 22, boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
             position: 'relative', overflow: 'hidden',
