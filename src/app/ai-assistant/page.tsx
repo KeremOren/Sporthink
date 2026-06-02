@@ -22,7 +22,7 @@ const AI_PERSONAS: Record<string, { name: string; icon: string; color: string; s
         icon: 'admin_panel_settings',
         color: '#E53935',
         subtitle: 'Sistem yönetimi, raporlama ve stratejik kararlar',
-        welcome: '🏢 Merhaba Admin! Ben **Sporthink Yönetim Asistanınızım** — Google Gemini AI ile güçlendirilmiş.\n\nSize şu konularda yardımcı olabilirim:\n\n• 📊 Tüm mağazaların eğitim performans analizi\n• 📈 KPI ve hedef takibi\n• 🎯 Eğitim içerik stratejisi önerileri\n• 📋 Sistem raporları ve istatistikler\n• 🧠 Stratejik karar desteği',
+        welcome: '🏢 Merhaba Admin! Ben **Sporthink Yönetim Asistanınızım** — yapay zeka ile güçlendirilmiş.\n\nSize şu konularda yardımcı olabilirim:\n\n• 📊 Tüm mağazaların eğitim performans analizi\n• 📈 KPI ve hedef takibi\n• 🎯 Eğitim içerik stratejisi önerileri\n• 📋 Sistem raporları ve istatistikler\n• 🧠 Stratejik karar desteği',
         suggestions: [
             'Hangi mağazanın eğitim tamamlama oranı en düşük?',
             'Genel KPI performansı nasıl?',
@@ -35,7 +35,7 @@ const AI_PERSONAS: Record<string, { name: string; icon: string; color: string; s
         icon: 'map',
         color: '#8b5cf6',
         subtitle: 'Bölge performansı ve mağaza karşılaştırmaları',
-        welcome: '📊 Merhaba Bölge Müdürü! Ben **Bölge Performans Danışmanınızım** — Gemini AI destekli.\n\nBölgenizdeki mağazalar hakkında:\n\n• 🏪 Mağazalar arası karşılaştırma\n• 👥 Personel gelişim önerileri\n• 📋 Eğitim atama stratejileri\n• 📈 KPI hedeflerine ulaşım analizi',
+        welcome: '📊 Merhaba Bölge Müdürü! Ben **Bölge Performans Danışmanınızım** — yapay zeka destekli.\n\nBölgenizdeki mağazalar hakkında:\n\n• 🏪 Mağazalar arası karşılaştırma\n• 👥 Personel gelişim önerileri\n• 📋 Eğitim atama stratejileri\n• 📈 KPI hedeflerine ulaşım analizi',
         suggestions: [
             'Bölgemdeki mağazaları karşılaştır',
             'Personel gelişim önerisi ver',
@@ -61,7 +61,7 @@ const AI_PERSONAS: Record<string, { name: string; icon: string; color: string; s
         icon: 'support_agent',
         color: '#22c55e',
         subtitle: 'Günlük operasyonlar ve eğitim desteği',
-        welcome: '🤝 Merhaba! Ben **Operasyon Asistanınızım** — Gemini AI destekli.\n\n• 🏪 Mağaza standartları ve prosedürler\n• 📚 Eğitim içerikleri hakkında sorular\n• ⚙️ Operasyonel süreç rehberliği',
+        welcome: '🤝 Merhaba! Ben **Operasyon Asistanınızım** — yapay zeka destekli.\n\n• 🏪 Mağaza standartları ve prosedürler\n• 📚 Eğitim içerikleri hakkında sorular\n• ⚙️ Operasyonel süreç rehberliği',
         suggestions: [
             'Mağaza açılış prosedürü nedir?',
             'Kasa işlemleri hakkında bilgi ver',
@@ -74,7 +74,7 @@ const AI_PERSONAS: Record<string, { name: string; icon: string; color: string; s
         icon: 'school',
         color: '#f59e0b',
         subtitle: 'Kişisel gelişim, eğitim desteği ve kariyer rehberliği',
-        welcome: '👋 Merhaba! Ben senin **Öğrenme Arkadaşınım** — Gemini AI ile güçlendirilmiş!\n\nSana şu konularda yardımcı olabilirim:\n\n• 📚 Eğitim içeriklerini özetleme\n• 📝 Sınava hazırlık soruları\n• 🎯 Kariyer gelişim önerileri\n• 🏷️ Mağaza standartları bilgisi\n• 💪 Motivasyon ve öğrenme ipuçları',
+        welcome: '👋 Merhaba! Ben senin **Öğrenme Arkadaşınım** — yapay zeka ile güçlendirilmiş!\n\nSana şu konularda yardımcı olabilirim:\n\n• 📚 Eğitim içeriklerini özetleme\n• 📝 Sınava hazırlık soruları\n• 🎯 Kariyer gelişim önerileri\n• 🏷️ Mağaza standartları bilgisi\n• 💪 Motivasyon ve öğrenme ipuçları',
         suggestions: [
             'Sınava nasıl hazırlanmalıyım?',
             'Alarm ve etiket kurallarını özetle',

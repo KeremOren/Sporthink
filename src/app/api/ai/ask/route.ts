@@ -134,9 +134,9 @@ KAPSAM KURALI (ÇOK ÖNEMLİ):
 
 - Şüpheli bir soruda (iş hayatıyla bağlantı kurulabilir mi diye düşünüyorsan) sadece iş bağlamında kalarak yanıtla.`;
 
-        // Call Gemini API
-        const apiKey = process.env.GEMINI_API_KEY;
-        
+        // Call Groq API (OpenAI-compatible chat completions)
+        const apiKey = process.env.GROQ_API_KEY;
+
         if (!apiKey) {
             // Fallback to rule-based if no API key
             return NextResponse.json({
@@ -146,96 +146,69 @@ KAPSAM KURALI (ÇOK ÖNEMLİ):
             });
         }
 
-        // Try multiple models with direct fetch (more reliable than SDK)
-        const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
+        // Groq modelleri (sırayla denenir — biri başarısız olursa diğerine geçer)
+        const modelsToTry = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
         let answer = '';
         let usedModel = '';
         let lastError = '';
 
-        // Build conversation context from history
-        const historyContext = (history || [])
+        // Konuşma geçmişini OpenAI mesaj formatına çevir (son 6 mesaj)
+        const historyMessages = (history || [])
             .filter((msg: any) => msg.content && msg.content.trim())
             .slice(-6)
-            .map((msg: any) => `${msg.role === 'user' ? 'Kullanıcı' : 'Asistan'}: ${msg.content}`)
-            .join('\n\n');
+            .map((msg: any) => ({
+                role: msg.role === 'user' ? 'user' : 'assistant',
+                content: msg.content,
+            }));
 
-        const fullPrompt = historyContext 
-            ? `Önceki konuşma:\n${historyContext}\n\nKullanıcının yeni sorusu: ${question}`
-            : question;
+        const messages = [
+            { role: 'system', content: systemPrompt },
+            ...historyMessages,
+            { role: 'user', content: question },
+        ];
 
         for (const modelName of modelsToTry) {
             try {
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-                
-                const res = await fetch(apiUrl, {
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                    },
                     body: JSON.stringify({
-                        system_instruction: {
-                            parts: [{ text: systemPrompt }]
-                        },
-                        contents: [{
-                            parts: [{ text: fullPrompt }]
-                        }],
-                        generationConfig: {
-                            temperature: 0.7,
-                            maxOutputTokens: 1024,
-                        },
+                        model: modelName,
+                        messages,
+                        temperature: 0.7,
+                        max_tokens: 1024,
                     }),
                 });
 
                 if (!res.ok) {
                     const errData = await res.json().catch(() => ({}));
                     lastError = `${res.status}: ${errData?.error?.message || res.statusText}`;
-                    console.warn(`Model ${modelName} failed: ${lastError.substring(0, 120)}`);
-                    
-                    // If rate limited, wait and retry once
-                    if (res.status === 429) {
-                        console.log(`Rate limited on ${modelName}, waiting 10s...`);
-                        await new Promise(resolve => setTimeout(resolve, 10000));
-                        
-                        const retryRes = await fetch(apiUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                system_instruction: { parts: [{ text: systemPrompt }] },
-                                contents: [{ parts: [{ text: fullPrompt }] }],
-                                generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
-                            }),
-                        });
-                        
-                        if (retryRes.ok) {
-                            const retryData = await retryRes.json();
-                            answer = retryData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                            if (answer) { usedModel = modelName; break; }
-                        }
-                    }
+                    console.warn(`Groq model ${modelName} failed: ${lastError.substring(0, 120)}`);
                     continue;
                 }
 
                 const data = await res.json();
-                answer = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                answer = data?.choices?.[0]?.message?.content || '';
                 if (answer) {
                     usedModel = modelName;
                     break;
                 }
             } catch (modelError: any) {
                 lastError = modelError?.message || String(modelError);
-                console.warn(`Model ${modelName} fetch error:`, lastError.substring(0, 150));
+                console.warn(`Groq model ${modelName} fetch error:`, lastError.substring(0, 150));
                 continue;
             }
         }
 
         if (!answer) {
-            // All models failed — return clear error
-            console.error('All Gemini models failed. Last error:', lastError);
-
-            const keyInfo = apiKey ? `key: ...${apiKey.slice(-6)}` : 'KEY YOK';
-            const errorAnswer = `⚠️ **Gemini API Hatası (Teşhis Modu)**\n\n**Asıl hata:**\n\`\`\`\n${lastError || 'bilinmiyor'}\n\`\`\`\n\n(${keyInfo})\n\n---\n\n${generateFallbackAnswer(question, user, userStats)}`;
-
+            // Tüm modeller başarısız → fallback
+            console.error('All Groq models failed. Last error:', lastError);
             return NextResponse.json({
-                answer: errorAnswer,
-                sources: ['Teşhis Modu'],
+                answer: generateFallbackAnswer(question, user, userStats),
+                sources: ['Sporthink Bilgi Tabanı'],
                 timestamp: new Date().toISOString(),
             });
         }
@@ -252,7 +225,7 @@ KAPSAM KURALI (ÇOK ÖNEMLİ):
 
         return NextResponse.json({
             answer,
-            sources: trainingId ? [trainingTitle || 'Eğitim İçeriği'] : ['Gemini AI + Sporthink Bilgi Tabanı'],
+            sources: trainingId ? [trainingTitle || 'Eğitim İçeriği'] : ['Sporthink AI Asistan'],
             timestamp: new Date().toISOString(),
             model: usedModel,
         });

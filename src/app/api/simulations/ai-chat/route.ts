@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     const scenario = await prisma.simScenario.findUnique({ where: { id: scenarioId } });
     if (!scenario) return NextResponse.json({ error: 'Senaryo bulunamadı' }, { status: 404 });
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
         return NextResponse.json({
             reply: 'Hmm, ben şu an düşünemiyorum (AI servisi kapalı). Yöneticine söyle, lütfen.',
@@ -60,41 +60,41 @@ Mesajının başında MUTLAKA tek satır mood göstergesi olmalı:
 Hmm, biraz pahalı geldi bana. Daha uygun fiyatlı bir alternatif var mı?
 `;
 
-    // Convert history to Gemini format
-    const contents: any[] = [];
+    // Konuşma geçmişini OpenAI mesaj formatına çevir
+    const chatMessages: any[] = [{ role: 'system', content: persona }];
     for (const msg of (history || [])) {
         if (!msg.content?.trim()) continue;
-        contents.push({
-            role: msg.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: msg.content }],
+        chatMessages.push({
+            role: msg.role === 'assistant' ? 'assistant' : 'user',
+            content: msg.content,
         });
     }
-    // Add new user message
-    contents.push({
-        role: 'user',
-        parts: [{ text: message }],
-    });
+    // Yeni kullanıcı mesajını ekle
+    chatMessages.push({ role: 'user', content: message });
 
-    const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
+    const modelsToTry = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
     let reply = '';
     let usedModel = '';
 
     for (const modelName of modelsToTry) {
         try {
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-            const res = await fetch(apiUrl, {
+            const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                },
                 body: JSON.stringify({
-                    system_instruction: { parts: [{ text: persona }] },
-                    contents,
-                    generationConfig: { temperature: 0.85, maxOutputTokens: 300 },
+                    model: modelName,
+                    messages: chatMessages,
+                    temperature: 0.85,
+                    max_tokens: 300,
                 }),
             });
 
             if (!res.ok) continue;
             const data = await res.json();
-            reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+            reply = data?.choices?.[0]?.message?.content || '';
             if (reply) { usedModel = modelName; break; }
         } catch {
             continue;

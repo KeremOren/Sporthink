@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     const scenario = await prisma.simScenario.findUnique({ where: { id: scenarioId } });
     if (!scenario) return NextResponse.json({ error: 'Senaryo bulunamadı' }, { status: 404 });
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
 
     // Build transcript
     const transcript = history
@@ -72,31 +72,32 @@ Değerlendirme kriterleri:
 
 Türkçe yaz. Sadece JSON döndür.`;
 
-        const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-flash-8b', 'gemini-2.0-flash'];
+        const modelsToTry = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant'];
         for (const modelName of modelsToTry) {
             try {
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-                const res = await fetch(apiUrl, {
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                    },
                     body: JSON.stringify({
-                        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                        generationConfig: {
-                            temperature: 0.3,
-                            maxOutputTokens: 800,
-                            responseMimeType: 'application/json',
-                        },
+                        model: modelName,
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.3,
+                        max_tokens: 800,
+                        response_format: { type: 'json_object' },
                     }),
                 });
 
                 if (!res.ok) continue;
                 const data = await res.json();
-                const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                const text = data?.choices?.[0]?.message?.content || '';
                 try {
                     evaluation = JSON.parse(text);
                     break;
                 } catch {
-                    // Try to extract JSON if wrapped in markdown
+                    // Markdown içine sarılmışsa JSON'u çek
                     const m = text.match(/\{[\s\S]*\}/);
                     if (m) {
                         try { evaluation = JSON.parse(m[0]); break; } catch { /* ignore */ }
