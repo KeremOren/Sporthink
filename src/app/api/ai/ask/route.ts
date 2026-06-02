@@ -249,29 +249,53 @@ KAPSAM KURALI (ÇOK ÖNEMLİ):
 async function getUserStats(userId: string, role: string, storeId?: string) {
     const stats: any = {};
 
+    const now = new Date();
+    const isOverdue = (a: any) => a.status !== 'COMPLETED' && a.dueDate && new Date(a.dueDate) < now;
+
     if (role === 'EMPLOYEE' || role === 'ASSISTANT_MANAGER') {
         const assignments = await prisma.trainingAssignment.findMany({
             where: { userId },
-            select: { status: true },
+            select: { status: true, dueDate: true, training: { select: { title: true } } },
         });
         stats.totalAssignments = assignments.length;
         stats.completed = assignments.filter(a => a.status === 'COMPLETED').length;
-        stats.overdue = assignments.filter(a => a.status === 'OVERDUE').length;
-        stats.inProgress = assignments.filter(a => a.status === 'IN_PROGRESS').length;
+        stats.overdue = assignments.filter(isOverdue).length;
+        stats.inProgress = assignments.filter(a => a.status === 'IN_PROGRESS' || a.status === 'READY_FOR_QUIZ').length;
         stats.completionRate = stats.totalAssignments > 0 ? Math.round((stats.completed / stats.totalAssignments) * 100) : 0;
+        // Gerçek eğitim isimleri
+        stats.completedTitles = assignments.filter(a => a.status === 'COMPLETED').map(a => a.training.title).slice(0, 8);
+        stats.pendingTitles = assignments.filter(a => a.status !== 'COMPLETED').map(a => a.training.title).slice(0, 8);
+        stats.overdueTitles = assignments.filter(isOverdue).map(a => a.training.title).slice(0, 8);
+        // Sertifika sayısı = tamamlanan eğitim sayısı
+        stats.certificateCount = stats.completed;
     }
 
     if (role === 'STORE_MANAGER' && storeId) {
-        const storeUsers = await prisma.user.count({ where: { storeId, role: 'EMPLOYEE', isActive: true } });
-        const storeAssignments = await prisma.trainingAssignment.findMany({
-            where: { user: { storeId } },
-            select: { status: true },
+        const store = await prisma.store.findUnique({ where: { id: storeId }, select: { name: true } });
+        stats.storeName = store?.name || 'Mağazanız';
+        const teamMembers = await prisma.user.findMany({
+            where: { storeId, role: { in: ['EMPLOYEE', 'ASSISTANT_MANAGER'] }, isActive: true },
+            select: {
+                firstName: true, lastName: true,
+                trainingAssignments: { select: { status: true, dueDate: true } },
+            },
         });
-        stats.teamSize = storeUsers;
-        stats.teamTotal = storeAssignments.length;
-        stats.teamCompleted = storeAssignments.filter(a => a.status === 'COMPLETED').length;
-        stats.teamOverdue = storeAssignments.filter(a => a.status === 'OVERDUE').length;
+        stats.teamSize = teamMembers.length;
+        const allAssign = teamMembers.flatMap(m => m.trainingAssignments);
+        stats.teamTotal = allAssign.length;
+        stats.teamCompleted = allAssign.filter(a => a.status === 'COMPLETED').length;
+        stats.teamOverdue = allAssign.filter(isOverdue).length;
         stats.teamRate = stats.teamTotal > 0 ? Math.round((stats.teamCompleted / stats.teamTotal) * 100) : 0;
+        // Geride kalan çalışanlar (gecikmiş eğitimi olanlar)
+        stats.laggingMembers = teamMembers
+            .filter(m => m.trainingAssignments.some(isOverdue))
+            .map(m => `${m.firstName} ${m.lastName}`)
+            .slice(0, 6);
+        // En iyi çalışanlar (hepsini tamamlamış)
+        stats.topMembers = teamMembers
+            .filter(m => m.trainingAssignments.length > 0 && m.trainingAssignments.every(a => a.status === 'COMPLETED'))
+            .map(m => `${m.firstName} ${m.lastName}`)
+            .slice(0, 6);
     }
 
     if (role === 'SUPER_ADMIN' || role === 'REGIONAL_MANAGER') {
@@ -282,34 +306,73 @@ async function getUserStats(userId: string, role: string, storeId?: string) {
         stats.totalAssignments = totalAssignments;
         stats.completedAssignments = completedAssignments;
         stats.overallRate = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
+
+        // Mağaza bazlı tamamlama oranı (en iyi / en kötü)
+        const storeWhere: any = {};
+        if (role === 'REGIONAL_MANAGER' && (await prisma.user.findUnique({ where: { id: userId }, select: { regionId: true } }))?.regionId) {
+            const u = await prisma.user.findUnique({ where: { id: userId }, select: { regionId: true } });
+            if (u?.regionId) storeWhere.regionId = u.regionId;
+        }
+        const stores = await prisma.store.findMany({
+            where: storeWhere,
+            select: {
+                name: true,
+                users: { where: { isActive: true }, select: { trainingAssignments: { select: { status: true } } } },
+            },
+        });
+        const storeRates = stores.map(s => {
+            const all = s.users.flatMap(u => u.trainingAssignments);
+            const done = all.filter(a => a.status === 'COMPLETED').length;
+            return { name: s.name, rate: all.length > 0 ? Math.round((done / all.length) * 100) : 0, total: all.length };
+        }).filter(s => s.total > 0).sort((a, b) => b.rate - a.rate);
+        stats.topStores = storeRates.slice(0, 3).map(s => `${s.name} (%${s.rate})`);
+        stats.bottomStores = storeRates.slice(-3).reverse().map(s => `${s.name} (%${s.rate})`);
+        stats.storeCount = stores.length;
     }
 
     return stats;
 }
 
 function formatUserStats(role: string, stats: any): string {
+    const list = (arr?: string[]) => (arr && arr.length ? arr.join(', ') : 'yok');
+
     if (role === 'EMPLOYEE' || role === 'ASSISTANT_MANAGER') {
-        return `Kullanıcı İstatistikleri:
-- Toplam eğitim: ${stats.totalAssignments || 0}
-- Tamamlanan: ${stats.completed || 0}
+        return `BU ÇALIŞANIN GERÇEK VERİLERİ (yanıtlarında bunları kullan):
+- Toplam atanan eğitim: ${stats.totalAssignments || 0}
+- Tamamlanan: ${stats.completed || 0} (= ${stats.certificateCount || 0} sertifika)
 - Devam eden: ${stats.inProgress || 0}
 - Gecikmiş: ${stats.overdue || 0}
-- Tamamlama oranı: %${stats.completionRate || 0}`;
+- Tamamlama oranı: %${stats.completionRate || 0}
+- Tamamladığı eğitimler: ${list(stats.completedTitles)}
+- Henüz bitirmediği eğitimler: ${list(stats.pendingTitles)}
+- GECİKMİŞ eğitimleri (öncelik ver): ${list(stats.overdueTitles)}
+
+Bu çalışana özel, kişisel tavsiyeler ver. "Şu eğitimini tamamlamalısın" gibi somut yönlendir.`;
     }
     if (role === 'STORE_MANAGER') {
-        return `Mağaza İstatistikleri:
-- Ekip büyüklüğü: ${stats.teamSize || 0} satış danışmanı
+        return `BU MAĞAZA MÜDÜRÜNÜN GERÇEK VERİLERİ (yanıtlarında bunları kullan):
+- Mağaza: ${stats.storeName || '-'}
+- Ekip büyüklüğü: ${stats.teamSize || 0} kişi
 - Toplam eğitim ataması: ${stats.teamTotal || 0}
 - Tamamlanan: ${stats.teamCompleted || 0}
 - Gecikmiş: ${stats.teamOverdue || 0}
-- Ekip tamamlama oranı: %${stats.teamRate || 0}`;
+- Ekip tamamlama oranı: %${stats.teamRate || 0}
+- Geride kalan çalışanlar (gecikmiş eğitimi olanlar): ${list(stats.laggingMembers)}
+- Tüm eğitimlerini bitiren çalışanlar: ${list(stats.topMembers)}
+
+Müdüre koçluk yap. Geride kalan çalışanları ismen söyle ve onlar için aksiyon öner.`;
     }
     if (role === 'SUPER_ADMIN' || role === 'REGIONAL_MANAGER') {
-        return `Sistem İstatistikleri:
+        return `${role === 'SUPER_ADMIN' ? 'SİSTEM' : 'BÖLGE'} GERÇEK VERİLERİ (yanıtlarında bunları kullan):
+- Mağaza sayısı: ${stats.storeCount || 0}
 - Toplam aktif kullanıcı: ${stats.totalUsers || 0}
 - Toplam eğitim ataması: ${stats.totalAssignments || 0}
 - Tamamlanan: ${stats.completedAssignments || 0}
-- Genel tamamlama oranı: %${stats.overallRate || 0}`;
+- Genel tamamlama oranı: %${stats.overallRate || 0}
+- EN İYİ mağazalar: ${list(stats.topStores)}
+- EN GERİDE mağazalar (aksiyon gerekli): ${list(stats.bottomStores)}
+
+Stratejik ve veri odaklı konuş. Geride kalan mağazaları ismen söyle ve onlar için plan öner.`;
     }
     return '';
 }
