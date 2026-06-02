@@ -136,7 +136,7 @@ ${SPORTHINK_KNOWLEDGE}
 ${trainingContext}
 
 Kurallar:
-- Türkçe yanıt ver.
+- SADECE Türkçe yanıt ver. ASLA Çince, İngilizce veya başka bir dilden kelime/karakter kullanma. Tüm yanıtın baştan sona Türkçe ve Latin alfabesiyle olmalı (所以, 因此 gibi karakterler KESİNLİKLE YASAK).
 - Kısa ve öz yanıtlar ver, gereksiz uzatma.
 - Markdown formatı kullan (bold, liste, emoji).
 - Kullanıcının rolüne göre uygun bir dil ve ton kullan.
@@ -230,6 +230,9 @@ KAPSAM KURALI (ÇOK ÖNEMLİ):
             });
         }
 
+        // Güvenlik filtresi: Llama bazen Çince/Japonca/Korece karakter sızdırıyor — temizle
+        answer = stripNonLatin(answer);
+
         // Log interaction
         await prisma.auditLog.create({
             data: {
@@ -262,6 +265,15 @@ KAPSAM KURALI (ÇOK ÖNEMLİ):
 }
 
 // ==================== HELPERS ====================
+
+// Çince/Japonca/Korece (CJK) karakterleri temizler — Llama bazen sızdırıyor
+function stripNonLatin(text: string): string {
+    if (!text) return text;
+    // CJK Unified Ideographs, Hiragana, Katakana, Hangul, CJK sembolleri
+    const cleaned = text.replace(/[　-〿぀-ゟ゠-ヿ㐀-䶿一-鿿가-힯豈-﫿＀-￯]/g, '');
+    // CJK temizliğinden sonra oluşabilecek çift boşlukları düzelt
+    return cleaned.replace(/ {2,}/g, ' ').replace(/\s+([,.!?])/g, '$1');
+}
 
 async function getUserStats(userId: string, role: string, storeId?: string) {
     const stats: any = {};

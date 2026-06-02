@@ -43,6 +43,7 @@ export async function POST(request: Request) {
 
 ## Rol Kuralları
 - Sen MÜŞTERİSİN, satış danışmanı değilsin. Asla rolden çıkma.
+- SADECE Türkçe konuş. ASLA Çince/İngilizce karakter kullanma (所以, 因此 gibi karakterler YASAK).
 - Türkçe, doğal, kısa cevaplar ver (2-4 cümle yeterli).
 - Gerçek bir müşteri gibi davran: bazen kararsız ol, bazen itiraz et, bazen sorular sor.
 - Senaryo kategorisine uygun davranış sergile (örn. İTİRAZ kategorisindeyse fiyat/kalite/marka itirazı yap).
@@ -107,6 +108,9 @@ Hmm, biraz pahalı geldi bana. Daha uygun fiyatlı bir alternatif var mı?
             offline: false,
         });
     }
+
+    // Çince/Japonca/Korece karakter sızıntısını temizle
+    reply = reply.replace(/[　-〿぀-ゟ゠-ヿ㐀-䶿一-鿿가-힯豈-﫿＀-￯]/g, '').replace(/ {2,}/g, ' ');
 
     // Parse mood + end tags
     let mood = 'NÖTR';
