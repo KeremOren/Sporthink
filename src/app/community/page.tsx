@@ -96,6 +96,20 @@ export default function CommunityPage() {
         } catch { showToast('Silinirken hata oluştu', 'error'); }
     };
 
+    const handleDeletePost = async (postId: string, postTitle: string) => {
+        if (!confirm(`"${postTitle}" başlıklı gönderiyi silmek istediğine emin misin?\n\nGönderi ve tüm yorumları kalıcı olarak silinecek.`)) return;
+        try {
+            const res = await fetch(`/api/community?postId=${postId}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                showToast(data?.error || 'Gönderi silinemedi', 'error');
+                return;
+            }
+            showToast('Gönderi silindi', 'success');
+            fetchPosts();
+        } catch { showToast('Silinirken hata oluştu', 'error'); }
+    };
+
     if (!session) return null;
     const user = session.user as any;
 
@@ -165,6 +179,37 @@ export default function CommunityPage() {
                                                 <span className="material-icons-outlined" style={{ fontSize: '0.8rem', marginRight: 4 }}>{cat.icon}</span>
                                                 {cat.label}
                                             </span>
+                                            {(post.author?.id === user.id || user.role === 'SUPER_ADMIN') && (
+                                                <button
+                                                    onClick={() => handleDeletePost(post.id, post.title)}
+                                                    title="Gönderiyi sil"
+                                                    style={{
+                                                        background: 'transparent',
+                                                        border: '1px solid rgba(239,68,68,0.3)',
+                                                        borderRadius: 8,
+                                                        color: '#ef4444',
+                                                        padding: '4px 8px',
+                                                        cursor: 'pointer',
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: 4,
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 600,
+                                                        transition: 'all 0.2s ease',
+                                                    }}
+                                                    onMouseEnter={e => {
+                                                        e.currentTarget.style.background = 'rgba(239,68,68,0.1)';
+                                                        e.currentTarget.style.borderColor = '#ef4444';
+                                                    }}
+                                                    onMouseLeave={e => {
+                                                        e.currentTarget.style.background = 'transparent';
+                                                        e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
+                                                    }}
+                                                >
+                                                    <span className="material-icons-outlined" style={{ fontSize: '0.95rem' }}>delete</span>
+                                                    Sil
+                                                </button>
+                                            )}
                                         </div>
 
                                         {/* Post Content */}
